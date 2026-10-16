@@ -71,12 +71,16 @@ export const useRegisterPage = () => {
             });
 
         try{
-            const response = await sendRequest("/api/register", "POST", data);        
-            
-            alert(response.mensaje);
-            setTimeout(() => {
-                navigate('/login');
-            }, 5000);
+            const response = await sendRequest("/api/register", "POST", data);
+
+            if (response?.status === 'success') {
+                alert(response.message || 'Usuario registrado exitosamente.');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 5000);
+            } else {
+                alert('No se pudo completar el registro. Inténtalo nuevamente.');
+            }
         }catch(error){
             alert(error.message);    
         }

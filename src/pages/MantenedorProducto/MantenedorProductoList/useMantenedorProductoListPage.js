@@ -73,7 +73,17 @@ export const useMantenedorProductoListPage = () => {
     const handleEliminarClick = async (id) => {
         if(window.confirm("¿Estás seguro de eliminar este producto?")){
             try{
-                await sendRequest(`/products/${id}`, 'DELETE', null)
+                const response = await sendRequest(`/api/productos/${id}`, 'DELETE')
+                if (!response) {
+                    alert('No se pudo eliminar el producto')
+                    return
+                }
+                setProductos(prev => prev.filter(producto => producto.asin !== id))
+                setImagenes(prev => {
+                    const restantes = { ...prev }
+                    delete restantes[id]
+                    return restantes
+                })
                 alert('Producto eliminado exitosamente')
             }catch(err){
                 alert(err.message)
