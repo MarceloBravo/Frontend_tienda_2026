@@ -63,7 +63,7 @@ export const MenuComponent = () => {
                   {userSession && userSession.isLoggedIn && 
                     <>
                       {userSession?.user?.username && <li>Hola {userSession.user.username} - </li>}
-                      <li><Link onClick={endSession}>Cerrar session</Link></li>
+                      <li><button type="button" onClick={endSession}>Cerrar session</button></li>
                     </>
                   }
                 </ul>
