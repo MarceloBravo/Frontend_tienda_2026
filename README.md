@@ -93,7 +93,7 @@ La organización es por tipo técnico. Los tests se colocan junto al archivo que
 - **Node.js 20 o superior** (los Dockerfiles usan `node:20-alpine`).
 - **npm** (incluido con Node).
 - El **backend** de la tienda en ejecución (por defecto en `http://localhost:3000`).
-- El **backend** de la aplicación se encuentra disponible en el repositorio `https://github.com/MarceloBravo/backend_tienda_2026.git` 
+- El **backend** de la aplicación se encuentra disponible en el repositorio [https://github.com/MarceloBravo/backend_tienda_2026.git](https://github.com/MarceloBravo/backend_tienda_2026.git)
 
 ## Clonar y ejecutar en local
 
