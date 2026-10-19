@@ -4,6 +4,7 @@ import { SpinnerComponent } from '../../../components/spinner/SpinnerComponent';
 import { useNavigate } from 'react-router';
 import { useHttp } from '../../../hooks/useHttp';
 import { cargarImagen } from '../../../utils/images';
+import { useToastStore } from '../../../store/toastStore';
 
 export const useMantenedorProductoListPage = () => {
     const { sendRequest } = useHttp();
@@ -11,6 +12,7 @@ export const useMantenedorProductoListPage = () => {
     const [ productos, setProductos ] = useState([]);
     const [ imagenes, setImagenes ] = useState({})
     const [ searchText, setSearchText ] = useState('');
+    const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate();
 
 
@@ -52,7 +54,7 @@ export const useMantenedorProductoListPage = () => {
             const response = await sendRequest(`/api/productos${search}`);
             setProductos(response.data);
         }catch(error){
-            alert('Ocurrió un error al filtrar los datos')
+            addToast('Ocurrió un error al filtrar los datos', 'error')
         }
     }
 
@@ -75,7 +77,7 @@ export const useMantenedorProductoListPage = () => {
             try{
                 const response = await sendRequest(`/api/productos/${id}`, 'DELETE')
                 if (!response) {
-                    alert('No se pudo eliminar el producto')
+                    addToast('No se pudo eliminar el producto', 'error')
                     return
                 }
                 setProductos(prev => prev.filter(producto => producto.asin !== id))
@@ -84,9 +86,9 @@ export const useMantenedorProductoListPage = () => {
                     delete restantes[id]
                     return restantes
                 })
-                alert('Producto eliminado exitosamente')
+                addToast('Producto eliminado exitosamente', 'success')
             }catch(err){
-                alert(err.message)
+                addToast('Ocurrió un error al eliminar el producto', 'error')
             }
         }
     }

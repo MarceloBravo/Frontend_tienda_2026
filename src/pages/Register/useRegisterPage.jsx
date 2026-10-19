@@ -2,6 +2,7 @@ import { useHttp } from '../../hooks/useHttp';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RegisterSchema } from './RegisterSchema';
+import { useToastStore } from '../../store/toastStore';
 
 import styles from './RegisterPage.module.css';
 
@@ -18,6 +19,7 @@ export const useRegisterPage = () => {
     });
     const [ formErrors, setFormErrors ] = useState({});
     const [passwordStrength, setPasswordStrength] = useState(0);
+    const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate();
 
 
@@ -74,15 +76,15 @@ export const useRegisterPage = () => {
             const response = await sendRequest("/api/register", "POST", data);
 
             if (response?.status === 'success') {
-                alert(response.message || 'Usuario registrado exitosamente.');
+                addToast(response.message || 'Usuario registrado exitosamente.', 'success');
                 setTimeout(() => {
                     navigate('/login');
                 }, 5000);
             } else {
-                alert('No se pudo completar el registro. Inténtalo nuevamente.');
+                addToast('No se pudo completar el registro. Inténtalo nuevamente.', 'error');
             }
         }catch(error){
-            alert(error.message);    
+            addToast('Ocurrió un error al registrar el usuario.', 'error');
         }
     };
 

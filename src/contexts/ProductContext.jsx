@@ -36,6 +36,9 @@ function productReducer(state, action) {
       return { ...state, loading: false, error: action.payload };
     case 'CACHE_PRODUCT_LIST':
       // Cachea productos del listado (array de productos)
+      if (!Array.isArray(action.payload?.data)) {
+        return { ...state, loading: false };
+      }
       const updatedProductsCache = { ...state.productsCache };
       action.payload.data.forEach(product => {
         updatedProductsCache[product.asin] = {

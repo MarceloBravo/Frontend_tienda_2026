@@ -52,7 +52,7 @@ export const MenuComponent = () => {
               <span className={styles.icon}>❤️</span>
               <span className={styles.cartCount}>{favoritos}</span>
             </Link>
-              <div class={styles.userMenu}>
+              <div className={styles.userMenu}>
                 <ul>
                   {(!userSession || !userSession.isLoggedIn) &&
                     <>

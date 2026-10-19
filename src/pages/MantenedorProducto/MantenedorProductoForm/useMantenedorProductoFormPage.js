@@ -5,6 +5,7 @@ import { cargarImagen } from '../../../utils/images'
 import { getMantenedorProductoFormSchema } from './MantenedorProductoFormSchema'
 import imgDefault from '../../../assets/imagen_foto.png'
 import imageCompression from 'browser-image-compression'
+import { useToastStore } from '../../../store/toastStore'
 
 export const useMantenedorProductoFormPage = () => {    
     const { error, sendRequest }= useHttp()
@@ -26,6 +27,7 @@ export const useMantenedorProductoFormPage = () => {
     })
     const [ validationErrors, setValidationErrors ] = useState({})
     const [ uploadProgress, setUploadProgress ] = useState(0)
+    const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate()
     const params = useParams()
     const id = params.id
@@ -68,7 +70,7 @@ export const useMantenedorProductoFormPage = () => {
                         is_best_seller: Boolean(response.data.is_best_seller)
                     })
                 }catch(error){
-                    alert('Ocurrió un error al cargar el producto')
+                    addToast('Ocurrió un error al cargar el producto', 'error');
                 }
             }
             cargarProducto()
@@ -79,8 +81,9 @@ export const useMantenedorProductoFormPage = () => {
 
     useEffect(() => {
         if(error){
-            alert(error)
+            addToast('Ocurrió un error', 'error');
         }
+        // eslint-disable-next-line
     },[error])
 
 
@@ -120,7 +123,7 @@ export const useMantenedorProductoFormPage = () => {
 
     const handleGrabarClick = async () => {
         if (!runValidation(formData)) {
-            alert('Los datos ingresados no son válidos o están incompletos');
+            addToast('Los datos ingresados no son válidos o están incompletos', 'error');
             return;
         }
 
@@ -161,10 +164,10 @@ export const useMantenedorProductoFormPage = () => {
 
             const response = await sendRequest('/api/productos', 'POST', fd, config)
             console.log(response)
-            alert('Producto guardado correctamente')
+            addToast('Producto guardado correctamente', 'success')
             navigate('/admin-producto')
         }catch(error){
-            alert('Ocurrió un error al guardar el producto')
+            addToast('Ocurrió un error al guardar el producto', 'error')
         }
     }
 
@@ -194,10 +197,10 @@ export const useMantenedorProductoFormPage = () => {
             };
 
             await sendRequest('/api/productos/' + id, 'PUT', fd, config)
-            alert('Producto actualizado correctamente')
+            addToast('Producto actualizado correctamente', 'success')
             navigate('/admin-producto')
         }catch(error){
-            alert('Ocurrió un error al actualizar el producto')
+            addToast('Ocurrió un error al actualizar el producto', 'error')
         }
     }
     
@@ -208,10 +211,10 @@ export const useMantenedorProductoFormPage = () => {
 
         try{
             await sendRequest('/api/productos/' + id, 'DELETE')
-            alert('Producto eliminado correctamente')
+            addToast('Producto eliminado correctamente', 'success')
             navigate('/admin-producto')
         }catch(error){
-            alert('Ocurrió un error al eliminar el producto')
+            addToast('Ocurrió un error al eliminar el producto', 'error')
         }
     }
 
@@ -223,7 +226,7 @@ export const useMantenedorProductoFormPage = () => {
         const file = e.target.files[0]
         if (file) {
             if (file.type !== 'image/png') {
-                alert('Solo se permiten imágenes PNG')
+                addToast('Solo se permiten imágenes PNG', 'error')
                 return
             }
 
@@ -249,7 +252,7 @@ export const useMantenedorProductoFormPage = () => {
                 reader.readAsDataURL(compressedFile)
 
             } catch (error) {
-                alert('Ocurrió un error al comprimir la imagen.')
+                addToast('Ocurrió un error al comprimir la imagen.', 'error')
                 console.error(error);
             }
         }

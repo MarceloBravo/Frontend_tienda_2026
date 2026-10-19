@@ -35,10 +35,14 @@ export const AuthProvider = ({ children }) => {
                 }
 
             }else{
-                setError('Usuario y o contraseña no válidos.');
+                const msg = 'Usuario y o contraseña no válidos.';
+                setError(msg);
+                throw new Error(msg);
             }
         }catch(error){
-            setError(error.response?.data?.message || 'Error al autenticar al usuario');
+            const msg = error.response?.data?.message || error.message || 'Error al autenticar al usuario';
+            setError(msg);
+            throw new Error(msg);
         }finally{
             setIsLoading(false);
         }

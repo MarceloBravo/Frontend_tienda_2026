@@ -1,0 +1,42 @@
+
+.toastContainer {
+    position: relative;
+    min-width: 280px;
+    max-width: 360px;
+    padding: 16px;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    word-break: break-word;
+}
+
+.toastContainer p{
+    margin: 0px;
+}
+
+.successToast {
+    background-color: #4CAF50; /* Green */
+}
+
+.errorToast {
+    background-color: #f44336; /* Red */
+}
+
+.warningToast {
+    background-color: #ff9800; /* Orange */
+}
+
+.defaultToast {
+    background-color: #2196F3; /* Blue */
+}
+
+.btnCloseToast {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
