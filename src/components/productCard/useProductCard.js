@@ -6,7 +6,7 @@ import { cargarImagen } from '../../utils/images';
 
 export const useProductCard = ({...data}) => {
     const { asin, product_photo, product_title, product_star_rating, product_num_ratings, product_price} = data
-    const titles = product_title.split('|')
+    const titles = (product_title ?? '').split('|')
     const [isFavorite, setIsFavorite] = useState(false);
     const { setContadorFavoritos } = useProducts();
     const [ urlImagen, setUrlImagen ] = useState()
@@ -30,9 +30,14 @@ export const useProductCard = ({...data}) => {
         const syncFavorites = () => {
             const strFavoritos = localStorage.getItem('favoritos');
             if(strFavoritos){
-                const favoritosArray = JSON.parse(strFavoritos);
-                const exists = favoritosArray.findIndex(p => p.asin === asin) !== -1;
-                setIsFavorite(exists);
+                try {
+                    const favoritosArray = JSON.parse(strFavoritos);
+                    if (!Array.isArray(favoritosArray)) return;
+                    const exists = favoritosArray.findIndex(p => p.asin === asin) !== -1;
+                    setIsFavorite(exists);
+                } catch {
+                    setIsFavorite(false);
+                }
             }
         }
         syncFavorites();
@@ -51,6 +56,7 @@ export const useProductCard = ({...data}) => {
         if (!favoritos) {
             const item = {asin, product_title, product_star_rating, product_num_ratings, product_price}
             localStorage.setItem('favoritos', JSON.stringify([item]));
+            setContadorFavoritos(1);
         } else {
             actualizarFavoritos(favoritos, newStateIsFavorite);
         }
@@ -58,7 +64,13 @@ export const useProductCard = ({...data}) => {
     }
     
     const actualizarFavoritos = (favoritos, isFavorite) => {
-        const favoritosArray = JSON.parse(favoritos);
+        let favoritosArray = [];
+        try {
+            const parsed = JSON.parse(favoritos);
+            favoritosArray = Array.isArray(parsed) ? parsed : [];
+        } catch {
+            favoritosArray = [];
+        }
         if (isFavorite) {   //Agregar
             const item = {asin, product_title, product_star_rating, product_num_ratings, product_price}
             favoritosArray.push(item);

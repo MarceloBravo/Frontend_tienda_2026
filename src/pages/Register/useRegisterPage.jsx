@@ -1,6 +1,6 @@
 import { useHttp } from '../../hooks/useHttp';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { RegisterSchema } from './RegisterSchema';
 import { useToastStore } from '../../store/toastStore';
 

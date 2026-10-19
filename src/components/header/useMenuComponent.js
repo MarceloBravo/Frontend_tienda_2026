@@ -26,8 +26,12 @@ export const useMenuComponent = () => {
     const checkFavoritos = () => {
       const fav = localStorage.getItem('favoritos')
       if(fav){
-        const totFav = JSON.parse(fav).length
-        setFavoritos(totFav)
+        try {
+          const parsed = JSON.parse(fav)
+          setFavoritos(Array.isArray(parsed) ? parsed.length : 0)
+        } catch {
+          setFavoritos(0)
+        }
       }
     }
     checkFavoritos()

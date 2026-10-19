@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import styles from './Pge404.module.css';
 
 export const Page404 = () => {

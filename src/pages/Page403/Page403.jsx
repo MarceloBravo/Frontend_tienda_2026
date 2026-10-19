@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import styles from './Page403.module.css';
 
 export const Page403 = () => {

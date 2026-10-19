@@ -35,7 +35,7 @@ const baseSchema = z.object({
     ),
     product_star_rating: z.preprocess(
         val => (val !== null && val !== '') ? Number(val) : null,
-        z.number({required_error: 'El campo es requerido', invalid_type_error: 'El campo debe ser un número'}).min(0).max(5, {message: 'El valor debe estar entre 0 y 5'})
+        z.number({required_error: 'El campo es requerido', invalid_type_error: 'El campo debe ser un número'}).min(0, {message: 'El valor debe estar entre 0 y 5'}).max(5, {message: 'El valor debe estar entre 0 y 5'})
     ),
     product_title: z.string().min(1, {message: 'El campo es requerido'}),
     sales_volume: z.string().min(1, {message: 'El campo es requerido'}).max(255, {message: 'El valor es demasiado extenso'}),

@@ -9,7 +9,10 @@ export const PasswordStrengthIndicator = ({ strength = 0 }) => {
         { width: "100%", color: "#28a745", text: "Muy Fuerte" },
     ];
 
-    const level = levels[strength];
+    const safeStrength = Number.isFinite(strength)
+        ? Math.min(Math.max(Math.trunc(strength), 0), levels.length - 1)
+        : 0;
+    const level = levels[safeStrength];
 
     return (
         <div>

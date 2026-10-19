@@ -33,5 +33,11 @@ La estructura del proyecto debe organizarse por por tipos técnicos ya que es un
 - **Null Safety:** Manejar siempre estados de carga (`isLoading`) y estados vacíos o nulos en las vistas para evitar errores de renderizado en runtime.
 
 ## 5. Pruebas y Calidad (Si aplica)
-- Escribir pruebas unitarias para custom hooks y componentes críticos utilizando herramientas como Vitest y React Testing Library, los test deben ubicarse utilizando la arquitectura de colocación (test en el mismo directorio del componente a testear).
+- Escribir pruebas unitarias para custom hooks y componentes críticos utilizando herramientas como Jest + React Testing Library, los test deben ubicarse utilizando la arquitectura de colocación (test en el mismo directorio del componente a testear).
+- Asegúrate de cubrir exhaustivamente: 
+El camino feliz (Happy Path).
+Casos límite (Edge Cases): Valores nulos, indefinidos, cadenas vacías, números negativos, desbordamiento de texto o listas vacías.
+Para cada función o componente, escribe al menos un test negativo o de error.
+Prueba con valores en 0, valores negativos, el límite máximo permitido y valores que excedan la capacidad visual.
+Manejo de errores: Comportamiento cuando una llamada a API falla (rechazo de promesas), tiempos de espera (timeouts) o estados de error.
 - Mantener el código limpio, sin console.logs de depuración ni código comentado innecesario antes de proponer cambios.

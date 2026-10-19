@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { SpinnerComponent } from '../../components/spinner/SpinnerComponent';
 import { useRegisterPage } from './useRegisterPage';
 import { PasswordStrengthIndicator } from '../../components/PasswordStrengthIndicator/PasswordStrengthIndicator';
