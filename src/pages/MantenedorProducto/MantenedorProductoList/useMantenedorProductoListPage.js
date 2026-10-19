@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useProducts } from '../../../contexts/ProductContext';
-import { SpinnerComponent } from '../../../components/spinner/SpinnerComponent';
 import { useNavigate } from 'react-router';
 import { useHttp } from '../../../hooks/useHttp';
 import { cargarImagen } from '../../../utils/images';
@@ -12,15 +11,16 @@ export const useMantenedorProductoListPage = () => {
     const [ productos, setProductos ] = useState([]);
     const [ imagenes, setImagenes ] = useState({})
     const [ searchText, setSearchText ] = useState('');
+    const [ error, setError ] = useState(null);
     const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate();
 
 
     useEffect(()=> {
         const obtenerProductos = async () => {
+            setError(null);
             try {
                 const response = await getAllProducts();
-                console.log(response.data);
                 const productosData = response?.data || [];
                 setProductos(productosData);
 
@@ -36,6 +36,7 @@ export const useMantenedorProductoListPage = () => {
                 });
                 setImagenes(imagenesObj);
             } catch (error) {
+                setError('Ocurrió un error al cargar los productos');
                 console.error('Error loading products:', error);
             }
         }
@@ -51,6 +52,7 @@ export const useMantenedorProductoListPage = () => {
     const handleBuscarClick = async (e) => {
         try{
             const search = searchText.trim().length > 0 ? `?search=${searchText}` : '';
+            setError(null);
             const response = await sendRequest(`/api/productos${search}`);
             setProductos(response.data);
         }catch(error){
@@ -94,8 +96,6 @@ export const useMantenedorProductoListPage = () => {
     }
 
 
-    if(state.isLoading) return <SpinnerComponent/>
-
     return {
         productos,
         imagenes,
@@ -106,6 +106,7 @@ export const useMantenedorProductoListPage = () => {
         handleEditarClick,
         handleEliminarClick,
         searchText,
+        error,
         state
     }
 }

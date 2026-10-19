@@ -1,4 +1,5 @@
 import { useMantenedorProductoFormPage } from './useMantenedorProductoFormPage'
+import { SpinnerComponent } from '../../../components/spinner/SpinnerComponent'
 
 import styles from './MantenedorProductoFormPage.module.css'
 
@@ -8,6 +9,7 @@ export const MantenedorProductoFormPage = () => {
         formData,
         validationErrors,
         uploadProgress,
+        isLoadingProduct,
         handleInputChange,
         handleCheckboxChange,
         handleInputNumberChange,
@@ -19,6 +21,8 @@ export const MantenedorProductoFormPage = () => {
         imgDefault,
         inputRef
     } = useMantenedorProductoFormPage();
+
+  if(isLoadingProduct) return <SpinnerComponent/>
 
   return (
     <div>

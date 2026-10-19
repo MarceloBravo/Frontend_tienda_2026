@@ -27,6 +27,7 @@ export const useMantenedorProductoFormPage = () => {
     })
     const [ validationErrors, setValidationErrors ] = useState({})
     const [ uploadProgress, setUploadProgress ] = useState(0)
+    const [ isLoadingProduct, setIsLoadingProduct ] = useState(false)
     const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate()
     const params = useParams()
@@ -59,6 +60,7 @@ export const useMantenedorProductoFormPage = () => {
     useEffect(()=> {
         if(id){
             const cargarProducto = async () => {
+                setIsLoadingProduct(true);
                 try{
                     const response = await sendRequest('/api/productos/' + id)
                     const urlFoto = await cargarImagen(response.data.product_photo)
@@ -71,6 +73,8 @@ export const useMantenedorProductoFormPage = () => {
                     })
                 }catch(error){
                     addToast('Ocurrió un error al cargar el producto', 'error');
+                }finally{
+                    setIsLoadingProduct(false);
                 }
             }
             cargarProducto()
@@ -162,8 +166,7 @@ export const useMantenedorProductoFormPage = () => {
                 }
             };
 
-            const response = await sendRequest('/api/productos', 'POST', fd, config)
-            console.log(response)
+            await sendRequest('/api/productos', 'POST', fd, config)
             addToast('Producto guardado correctamente', 'success')
             navigate('/admin-producto')
         }catch(error){
@@ -265,6 +268,7 @@ export const useMantenedorProductoFormPage = () => {
     formData,
     validationErrors,
     uploadProgress,
+    isLoadingProduct,
     handleInputChange,
     handleCheckboxChange,
     handleInputNumberChange,

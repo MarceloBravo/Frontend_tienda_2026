@@ -1,7 +1,7 @@
 import { BrowserRouter } from 'react-router';
 import { MenuComponent } from './components/header/MenuComponent';
 import Navigation from './routes/Navigation';
-import { ToastContainer } from './components/toast/ToastContainer';
+import { ToastContainer } from './components/toast/ToastContainer/ToastContainer';
 
 import './App.css';
 

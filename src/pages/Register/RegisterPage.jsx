@@ -123,6 +123,7 @@ export const RegisterPage = () => {
                             {formErrors.confirmPassword && <label htmlFor="password" className="label-error">{formErrors.confirmPassword}</label>}
                         </div>
                     </div>
+                    {formErrors._form && <label className="label-error">{formErrors._form}</label>}
                     <button type="submit" className={styles.button}>Registrarse</button>
                     <p className={styles.linkText}>
                     ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>

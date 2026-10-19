@@ -1,4 +1,5 @@
 import { SpinnerComponent } from '../../../components/spinner/SpinnerComponent';
+import { EmptyStateComponent } from '../../../components/emptyState/EmptyStateComponent';
 import { useMantenedorProductoListPage } from './useMantenedorProductoListPage';
 
 import styles from './MantenedorProductoListPage.module.css';
@@ -14,10 +15,12 @@ export const MantenedorProductoListPage = () => {
         handleEditarClick,
         handleEliminarClick,
         searchText, 
+        error,
         state
     } = useMantenedorProductoListPage();
 
     if(state.isLoading) return <SpinnerComponent/>
+    if(error) return <EmptyStateComponent message={error} />
 
     return (
         <div className={styles.container}>
@@ -53,7 +56,15 @@ export const MantenedorProductoListPage = () => {
                     </thead>
                     <tbody>
 
-                        {productos && productos.map(producto => 
+                        {(!productos || productos.length === 0) ? (
+                            <tr>
+                                <td colSpan={7}>
+                                    <EmptyStateComponent message={searchText.trim().length > 0
+                                        ? 'No se encontraron productos para tu búsqueda'
+                                        : 'No hay productos registrados'} />
+                                </td>
+                            </tr>
+                        ) : productos.map(producto => 
                             <tr key={producto.asin}>
                                 <td>{producto.asin}</td>
                                 <td className={styles.ellipsisn}>{producto.product_title}</td>

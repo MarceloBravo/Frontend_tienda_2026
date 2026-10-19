@@ -21,8 +21,6 @@ const saveRefreshToken = (refreshToken) => {
 
         // Guardar cookie con el mismo tiempo de vida
         document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${ttl}; secure; samesite=strict`;
-
-        console.log("Refresh token guardado en cookie con duración sincronizada");
     } catch (err) {
         console.error("Error al decodificar el refresh token:", err);
     }

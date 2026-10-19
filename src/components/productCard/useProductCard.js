@@ -18,7 +18,7 @@ export const useProductCard = ({...data}) => {
                 const url = await cargarImagen(product_photo);
                 setUrlImagen(url);
             }catch(error){
-                console.log(error)
+                console.error(error)
             }
         }
         cargarFoto();

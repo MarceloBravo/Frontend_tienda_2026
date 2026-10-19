@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useProducts } from '../../contexts/ProductContext.jsx'
 import { useParams } from 'react-router'
 import { SpinnerComponent } from '../../components/spinner/SpinnerComponent.jsx'
+import { EmptyStateComponent } from '../../components/emptyState/EmptyStateComponent.jsx'
 
 import styles from './DetalleProductoPage.module.css'
 
@@ -12,17 +13,21 @@ export const DetalleProductoPage = () => {
     const [ producto, setProducto ] = useState(null)
 
     useEffect(()=> {
-        const gobtenerProduct = async () => {
-            const data = await getProduct(id);
-            setProducto(data.data);
+        const obtenerProducto = async () => {
+            try {
+                const data = await getProduct(id);
+                setProducto(data.data);
+            } catch (error) {
+                console.error('Error loading product:', error);
+            }
         }
-        gobtenerProduct();
+        obtenerProducto();
         // eslint-disable-next-line
     },[id])
 
     if(state.loading) return <SpinnerComponent/>
-    if(state.error) return <p>Error: {state.error}</p>
-    if(!producto)return <p>Producto no encontrado</p>
+    if(state.error) return <EmptyStateComponent message={`Error: ${state.error}`} />
+    if(!producto) return <EmptyStateComponent message="Producto no encontrado" />
 
 
   return (

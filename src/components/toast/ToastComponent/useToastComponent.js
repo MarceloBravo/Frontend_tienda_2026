@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToastStore } from '../../store/toastStore';
+import { useToastStore } from '../../../store/toastStore';
 
 export const useToastComponent = (message, type, index) => {
   const [isVisible, setIsVisible] = useState(true);
