@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import { SpinnerComponent } from '../spinner/SpinnerComponent';
 import { useMenuComponent } from './useMenuComponent';
 
@@ -29,11 +29,13 @@ export const MenuComponent = () => {
               <img src={logo} alt="eCommerce Logo" />
               <span>MyStore</span>
             </Link>
-          </div>
+          </div>          
           <nav className={styles.navigation}>
             <ul>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/admin-producto">Mantenedor de Productos</Link></li>
+              <li><NavLink to="/" end className={({ isActive }) => isActive ? styles.navLinkActive : ''}>Home</NavLink></li>
+              {userSession && userSession.isLoggedIn && 
+                <li><NavLink to="/admin-producto" className={({ isActive }) => isActive ? styles.navLinkActive : ''}>Mantenedor de Productos</NavLink></li>
+              }
             </ul>
           </nav>
             <div className={styles.searchBar} style={{ visibility: (location.pathname === '/') ? "visible" : "hidden" }}>

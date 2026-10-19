@@ -27,12 +27,16 @@
 .searchControls {
     display: flex;
     align-items: center;
+    width: -webkit-fill-available;
+    justify-content: flex-end;
 }
 
 .inputSearch {
     padding: 10px 0px;
     border-radius: 5px 0 0 5px;
     border: 1px solid #ccc;
+    min-width: 164px;
+    width: 50%;
 }
 
 .btnBuscar{

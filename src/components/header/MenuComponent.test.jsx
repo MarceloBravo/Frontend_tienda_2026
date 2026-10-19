@@ -19,9 +19,9 @@ jest.mock('../../contexts/ProductContext', () => ({
 const loggedOut = { isLoggedIn: false, user: null, accessToken: null };
 const loggedIn = { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' };
 
-const renderMenu = (userSession) => render(
+const renderMenu = (userSession, initialEntries = ['/']) => render(
     <AuthContext.Provider value={{ logout: mockLogout, userSession }}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>
             <MenuComponent />
         </MemoryRouter>
     </AuthContext.Provider>
@@ -125,5 +125,45 @@ describe('MenuComponent', () => {
         await waitFor(() => {
             expect(mockGetAllProducts).toHaveBeenCalledWith('');
         });
+    });
+
+    it('hides the product manager link when there is no session', () => {
+        renderMenu(loggedOut);
+
+        expect(screen.queryByText('Mantenedor de Productos')).not.toBeInTheDocument();
+    });
+
+    it('shows the product manager link when logged in', () => {
+        renderMenu(loggedIn);
+
+        expect(screen.getByText('Mantenedor de Productos')).toBeInTheDocument();
+    });
+
+    it('marks Home as active and the product manager as inactive on "/" (happy path)', () => {
+        renderMenu(loggedIn, ['/']);
+
+        expect(screen.getByText('Home')).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByText('Mantenedor de Productos')).not.toHaveAttribute('aria-current');
+    });
+
+    it('keeps the product manager active on its sub-routes', () => {
+        renderMenu(loggedIn, ['/admin-producto/editar/1']);
+
+        expect(screen.getByText('Mantenedor de Productos')).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByText('Home')).not.toHaveAttribute('aria-current');
+    });
+
+    it('does not mark any nav link as active on an unrelated route (negative case)', () => {
+        renderMenu(loggedIn, ['/register']);
+
+        expect(screen.getByText('Home')).not.toHaveAttribute('aria-current');
+        expect(screen.getByText('Mantenedor de Productos')).not.toHaveAttribute('aria-current');
+    });
+
+    it('keeps the nav links without active state for an undefined session (edge case)', () => {
+        renderMenu(undefined, ['/']);
+
+        expect(screen.getByText('Home')).toHaveAttribute('aria-current', 'page');
+        expect(screen.queryByText('Mantenedor de Productos')).not.toBeInTheDocument();
     });
 });
