@@ -3,6 +3,7 @@ import { useProducts } from '../../../contexts/ProductContext';
 import { useNavigate } from 'react-router';
 import { useHttp } from '../../../hooks/useHttp';
 import { cargarImagen } from '../../../utils/images';
+import { normalizeProductsResponse } from '../../../utils/apiResponse';
 import { useToastStore } from '../../../store/toastStore';
 
 export const useMantenedorProductoListPage = () => {
@@ -10,6 +11,8 @@ export const useMantenedorProductoListPage = () => {
     const { state, getAllProducts} = useProducts();
     const [ productos, setProductos ] = useState([]);
     const [ imagenes, setImagenes ] = useState({})
+    const [ total, setTotal ] = useState(0);
+    const [ page, setPage ] = useState(1);
     const [ searchText, setSearchText ] = useState('');
     const [ error, setError ] = useState(null);
     const addToast = useToastStore(store => store.addToast);
@@ -21,8 +24,10 @@ export const useMantenedorProductoListPage = () => {
             setError(null);
             try {
                 const response = await getAllProducts();
-                const productosData = response?.data || [];
+                const { products: productosData, total: totalProductos, page: pagina } = normalizeProductsResponse(response);
                 setProductos(productosData);
+                setTotal(totalProductos);
+                setPage(pagina);
 
                 // Cargar imágenes para cada producto
                 const imagenesPromises = productosData.map(async (producto) => ({
@@ -54,7 +59,10 @@ export const useMantenedorProductoListPage = () => {
             const search = searchText.trim().length > 0 ? `?search=${searchText}` : '';
             setError(null);
             const response = await sendRequest(`/api/productos${search}`);
-            setProductos(response.data);
+            const { products: productosData, total: totalProductos, page: pagina } = normalizeProductsResponse(response);
+            setProductos(productosData);
+            setTotal(totalProductos);
+            setPage(pagina);
         }catch(error){
             addToast('Ocurrió un error al filtrar los datos', 'error')
         }
@@ -83,6 +91,7 @@ export const useMantenedorProductoListPage = () => {
                     return
                 }
                 setProductos(prev => prev.filter(producto => producto.asin !== id))
+                setTotal(prev => Math.max(0, prev - 1))
                 setImagenes(prev => {
                     const restantes = { ...prev }
                     delete restantes[id]
@@ -99,6 +108,8 @@ export const useMantenedorProductoListPage = () => {
     return {
         productos,
         imagenes,
+        total,
+        page,
         handleBtnNuevo,
         handleBuscarClick,
         handleInputChange,

@@ -8,6 +8,8 @@ export const MantenedorProductoListPage = () => {
     const {
         productos,
         imagenes,
+        total,
+        page,
         handleBtnNuevo,
         handleBuscarClick,
         handleInputChange,
@@ -42,6 +44,7 @@ export const MantenedorProductoListPage = () => {
             </div>
 
             <div className={styles.tabla}>
+                <p>Total de productos: {total} — Página: {page}</p>
                 <table>
                     <thead>
                         <tr>
@@ -69,9 +72,9 @@ export const MantenedorProductoListPage = () => {
                                 <td>{producto.asin}</td>
                                 <td className={styles.ellipsisn}>{producto.product_title}</td>
                                 <td><img src={imagenes[producto.asin]} alt={producto.titles} style={{width: '60px', height: 'auto', borderRadius: '4px'}} /></td>
-                                <td>{producto.product_price}</td>
-                                <td>{producto.product_original_price ? 'Sí': 'No'}</td>
-                                <td>{producto.product_is_amazon ? 'Sí' : 'No'}</td>
+                                <td>{producto.currency ? `${producto.currency} ${producto.product_price}` : producto.product_price}</td>
+                                <td>{producto.product_original_price ?? '—'}</td>
+                                <td>{producto.is_amazon_choice == null ? '—' : (producto.is_amazon_choice ? 'Sí' : 'No')}</td>
                                 <td>
                                     <button type="button" onClick={() => handleEditarClick(producto.asin)}>🖊️</button>
                                     <button type="button" onClick={() => handleEliminarClick(producto.asin)}>✖️</button>

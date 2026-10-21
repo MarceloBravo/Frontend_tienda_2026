@@ -5,8 +5,11 @@ import { cargarImagen } from '../../utils/images';
 
 
 export const useProductCard = ({...data}) => {
-    const { asin, product_photo, product_title, product_star_rating, product_num_ratings, product_price} = data
+    const { asin, currency, product_photo, product_title, product_star_rating, product_num_ratings, product_price} = data
     const titles = (product_title ?? '').split('|')
+    const priceLabel = currency
+        ? `${currency} ${product_price ?? ''}`.trim()
+        : `$ ${product_price ?? ''}`;
     const [isFavorite, setIsFavorite] = useState(false);
     const { setContadorFavoritos } = useProducts();
     const [ urlImagen, setUrlImagen ] = useState()
@@ -95,6 +98,7 @@ export const useProductCard = ({...data}) => {
         product_star_rating, 
         product_num_ratings, 
         product_price,
+        priceLabel,
         isFavorite,
         toggleFavorite,
         handleProdictoClick

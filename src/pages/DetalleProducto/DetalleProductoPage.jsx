@@ -15,8 +15,8 @@ export const DetalleProductoPage = () => {
     useEffect(()=> {
         const obtenerProducto = async () => {
             try {
-                const data = await getProduct(id);
-                setProducto(data.data);
+                const product = await getProduct(id);
+                setProducto(product);
             } catch (error) {
                 console.error('Error loading product:', error);
             }

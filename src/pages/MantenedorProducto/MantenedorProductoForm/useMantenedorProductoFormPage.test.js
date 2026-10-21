@@ -88,6 +88,7 @@ describe('useMantenedorProductoFormPage', () => {
     it('loads the product in edit mode (happy path)', async () => {
         mockParams = { id: 'ABC12' };
         mockSendRequest.mockResolvedValueOnce({
+            status: 'success',
             data: {
                 asin: 'ABC12',
                 product_title: 'Existente',
@@ -223,6 +224,7 @@ describe('useMantenedorProductoFormPage', () => {
     it('updates an existing product in edit mode (happy path)', async () => {
         mockParams = { id: 'ABC12' };
         mockSendRequest.mockResolvedValueOnce({
+            status: 'success',
             data: {
                 asin: 'ABC12',
                 currency: 'CLP',
@@ -307,6 +309,7 @@ describe('useMantenedorProductoFormPage', () => {
     it('deletes the product after confirming (happy path)', async () => {
         mockParams = { id: 'ABC12' };
         mockSendRequest.mockResolvedValueOnce({
+            status: 'success',
             data: {
                 asin: 'ABC12',
                 product_photo: 'p.png',

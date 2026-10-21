@@ -29,14 +29,21 @@ jest.mock('../../../store/toastStore', () => ({
 }));
 
 const productos = [
-    { asin: 'A1', product_title: 'Uno', product_photo: 'p1.png' },
-    { asin: 'A2', product_title: 'Dos', product_photo: 'p2.png' },
+    { asin: 'A1', currency: 'USD', product_price: 10, product_title: 'Uno', product_photo: 'p1.png' },
+    { asin: 'A2', currency: 'USD', product_price: 20, product_title: 'Dos', product_photo: 'p2.png' },
 ];
+
+const apiResponse = (data, totProd = data.length, page = 1) => ({
+    status: 'success',
+    data,
+    totProd,
+    page,
+});
 
 describe('useMantenedorProductoListPage', () => {
     beforeEach(() => {
         mockNavigate.mockReset();
-        mockGetAllProducts.mockReset().mockResolvedValue({ data: productos });
+        mockGetAllProducts.mockReset().mockResolvedValue({ products: productos, total: productos.length, page: 1 });
         mockSendRequest.mockReset();
         mockCargarImagen.mockReset().mockImplementation(async (photo) => `url-${photo}`);
         mockAddToast.mockReset();
@@ -57,6 +64,26 @@ describe('useMantenedorProductoListPage', () => {
         await waitFor(() => {
             expect(result.current.imagenes).toEqual({ A1: 'url-p1.png', A2: 'url-p2.png' });
         });
+    });
+
+    it('keeps the total and the page reported by the API (happy path)', async () => {
+        mockGetAllProducts.mockResolvedValueOnce({ products: productos, total: 42, page: 3 });
+        const { result } = renderHook(() => useMantenedorProductoListPage());
+
+        await waitFor(() => {
+            expect(result.current.total).toBe(42);
+        });
+        expect(result.current.page).toBe(3);
+    });
+
+    it('reads the products from the new API envelope (happy path)', async () => {
+        mockGetAllProducts.mockResolvedValueOnce(apiResponse(productos, 2, 1));
+        const { result } = renderHook(() => useMantenedorProductoListPage());
+
+        await waitFor(() => {
+            expect(result.current.productos).toHaveLength(2);
+        });
+        expect(result.current.total).toBe(2);
     });
 
     it('starts with an empty list and no error', () => {
@@ -89,7 +116,7 @@ describe('useMantenedorProductoListPage', () => {
     });
 
     it('searches products with the typed text', async () => {
-        mockSendRequest.mockResolvedValueOnce({ data: [productos[0]] });
+        mockSendRequest.mockResolvedValueOnce(apiResponse([productos[0]], 1, 1));
         const { result } = renderHook(() => useMantenedorProductoListPage());
         await waitFor(() => expect(result.current.productos).toHaveLength(2));
 
@@ -105,7 +132,7 @@ describe('useMantenedorProductoListPage', () => {
     });
 
     it('searches without a query when the text is empty (edge case)', async () => {
-        mockSendRequest.mockResolvedValueOnce({ data: productos });
+        mockSendRequest.mockResolvedValueOnce(apiResponse(productos));
         const { result } = renderHook(() => useMantenedorProductoListPage());
 
         act(() => {
@@ -116,6 +143,22 @@ describe('useMantenedorProductoListPage', () => {
         });
 
         expect(mockSendRequest).toHaveBeenCalledWith('/api/productos');
+    });
+
+    it('shows an empty list when the search returns an envelope without products (edge case)', async () => {
+        mockSendRequest.mockResolvedValueOnce({ status: 'success', data: null, totProd: 0, page: 1 });
+        const { result } = renderHook(() => useMantenedorProductoListPage());
+        await waitFor(() => expect(result.current.productos).toHaveLength(2));
+
+        act(() => {
+            result.current.handleInputChange({ target: { value: 'sin resultados' } });
+        });
+        await act(async () => {
+            await result.current.handleBuscarClick();
+        });
+
+        expect(result.current.productos).toEqual([]);
+        expect(result.current.total).toBe(0);
     });
 
     it('shows an error toast when the search fails (negative case)', async () => {
@@ -130,7 +173,7 @@ describe('useMantenedorProductoListPage', () => {
     });
 
     it('triggers the search when pressing Enter', async () => {
-        mockSendRequest.mockResolvedValueOnce({ data: productos });
+        mockSendRequest.mockResolvedValueOnce(apiResponse(productos));
         const { result } = renderHook(() => useMantenedorProductoListPage());
 
         act(() => {

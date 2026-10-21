@@ -5,7 +5,7 @@ import instance from './axios/axiosInstance';
 
 jest.mock('./axios/axiosInstance', () => ({
     __esModule: true,
-    default: jest.fn(() => Promise.resolve({ data: [] })),
+    default: jest.fn(() => Promise.resolve({ status: 'success', data: [], totProd: 0, page: 1 })),
     injectStore: jest.fn(),
 }));
 
@@ -19,7 +19,7 @@ describe('App', () => {
     beforeEach(() => {
         localStorage.clear();
         instance.mockReset();
-        instance.mockImplementation(() => Promise.resolve({ data: [] }));
+        instance.mockImplementation(() => Promise.resolve({ status: 'success', data: [], totProd: 0, page: 1 }));
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 

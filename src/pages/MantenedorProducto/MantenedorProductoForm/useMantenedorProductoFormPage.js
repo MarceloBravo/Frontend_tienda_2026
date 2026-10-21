@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useHttp } from '../../../hooks/useHttp'
 import { cargarImagen } from '../../../utils/images'
+import { normalizeProductResponse } from '../../../utils/apiResponse'
 import { getMantenedorProductoFormSchema } from './MantenedorProductoFormSchema'
 import imgDefault from '../../../assets/imagen_foto.png'
 import imageCompression from 'browser-image-compression'
@@ -63,14 +64,19 @@ export const useMantenedorProductoFormPage = () => {
                 setIsLoadingProduct(true);
                 try{
                     const response = await sendRequest('/api/productos/' + id)
-                    const urlFoto = await cargarImagen(response.data.product_photo)
-                    response.data.product_photo = urlFoto;
-                    setFormData({
-                        ...response.data,
-                        climate_pledge_friendly: Boolean(response.data.climate_pledge_friendly),
-                        is_amazon_choice: Boolean(response.data.is_amazon_choice),
-                        is_best_seller: Boolean(response.data.is_best_seller)
-                    })
+                    const { product } = normalizeProductResponse(response)
+                    if(!product){
+                        throw new Error('No se encontró el producto solicitado')
+                    }
+                    const urlFoto = await cargarImagen(product.product_photo)
+                    setFormData(prev => ({
+                        ...prev,
+                        ...product,
+                        product_photo: urlFoto,
+                        climate_pledge_friendly: Boolean(product.climate_pledge_friendly),
+                        is_amazon_choice: Boolean(product.is_amazon_choice),
+                        is_best_seller: Boolean(product.is_best_seller)
+                    }))
                 }catch(error){
                     addToast('Ocurrió un error al cargar el producto', 'error');
                 }finally{

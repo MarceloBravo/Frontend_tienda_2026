@@ -10,7 +10,7 @@ export const ProductCard = React.memo((data) => {
         urlImagen, 
         product_star_rating, 
         product_num_ratings, 
-        product_price,
+        priceLabel,
         isFavorite,
         toggleFavorite,
         handleProdictoClick
@@ -30,9 +30,13 @@ export const ProductCard = React.memo((data) => {
                 <div className={styles.productTitle}>{titles[2]}</div>
                 <div className={styles.productTitle}>{titles[3]}</div>
                 <div className={styles.productTating}>
-                    <div className={styles.productStarRating}>{product_star_rating}</div>
-                    <div className={styles.productNumRatings}>Rating {product_num_ratings}</div>
-                    <div className={styles.productNumRatings}>$ {product_price}</div>
+                    {product_star_rating != null && (
+                        <div className={styles.productStarRating}>{product_star_rating}</div>
+                    )}
+                    {product_num_ratings != null && (
+                        <div className={styles.productNumRatings}>Rating {product_num_ratings}</div>
+                    )}
+                    <div className={styles.productNumRatings}>{priceLabel}</div>
                 </div>
             </div>
         </div>
