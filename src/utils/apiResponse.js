@@ -10,6 +10,11 @@ const toNonNegativeNumber = (value, fallback) => {
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 };
 
+const toPositiveNumberOrNull = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : null;
+};
+
 const readStatus = (response) =>
     typeof response?.status === 'string' ? response.status : null;
 
@@ -31,12 +36,13 @@ export const normalizeProductsResponse = (response) => {
             status: SUCCESS_STATUS,
             products: response,
             total: response.length,
+            totalPages: 1,
             page: 1,
         };
     }
 
     if (!isObject(response)) {
-        return { status: null, products: [], total: 0, page: 1 };
+        return { status: null, products: [], total: 0, totalPages: 0, page: null };
     }
 
     const products = extractProducts(response);
@@ -45,7 +51,8 @@ export const normalizeProductsResponse = (response) => {
         status: readStatus(response),
         products,
         total: toNonNegativeNumber(response.totProd ?? response.total, products.length),
-        page: Math.max(1, toNonNegativeNumber(response.page, 1)),
+        totalPages: toNonNegativeNumber(response.totPages ?? response.totalPages, 0),
+        page: toPositiveNumberOrNull(response.page),
     };
 };
 

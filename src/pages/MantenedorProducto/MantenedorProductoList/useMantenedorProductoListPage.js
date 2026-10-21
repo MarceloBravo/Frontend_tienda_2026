@@ -1,45 +1,62 @@
 import { useEffect, useState } from 'react';
-import { useProducts } from '../../../contexts/ProductContext';
 import { useNavigate } from 'react-router';
 import { useHttp } from '../../../hooks/useHttp';
 import { cargarImagen } from '../../../utils/images';
 import { normalizeProductsResponse } from '../../../utils/apiResponse';
+import { buildProductsQuery } from '../../../utils/productsQuery';
 import { useToastStore } from '../../../store/toastStore';
 
 export const useMantenedorProductoListPage = () => {
     const { sendRequest } = useHttp();
-    const { state, getAllProducts} = useProducts();
     const [ productos, setProductos ] = useState([]);
     const [ imagenes, setImagenes ] = useState({})
     const [ total, setTotal ] = useState(0);
+    const [ totalPages, setTotalPages ] = useState(0);
     const [ page, setPage ] = useState(1);
+    const [ isLoading, setIsLoading ] = useState(false);
     const [ searchText, setSearchText ] = useState('');
     const [ error, setError ] = useState(null);
     const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate();
 
+    const cargarProductos = async (pageToLoad = 1, search = '') => {
+        setIsLoading(true);
+        try {
+            const response = await sendRequest(`/api/productos${buildProductsQuery({ search, page: pageToLoad })}`);
+            const {
+                products: productosData,
+                total: totalProductos,
+                totalPages: totalPaginas,
+                page: paginaActual,
+            } = normalizeProductsResponse(response);
+            console.log('response',response, 'totalPaginas',totalPaginas);
+
+            setProductos(productosData);
+            setTotal(totalProductos);
+            setTotalPages(totalPaginas);
+            setPage(paginaActual ?? pageToLoad);
+
+            // Cargar imágenes para cada producto
+            const imagenesPromises = productosData.map(async (producto) => ({
+                asin: producto.asin,
+                url: await cargarImagen(producto.product_photo)
+            }));
+            const imagenesResultados = await Promise.all(imagenesPromises);
+            const imagenesObj = {};
+            imagenesResultados.forEach(({ asin, url }) => {
+                imagenesObj[asin] = url;
+            });
+            setImagenes(imagenesObj);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     useEffect(()=> {
         const obtenerProductos = async () => {
             setError(null);
             try {
-                const response = await getAllProducts();
-                const { products: productosData, total: totalProductos, page: pagina } = normalizeProductsResponse(response);
-                setProductos(productosData);
-                setTotal(totalProductos);
-                setPage(pagina);
-
-                // Cargar imágenes para cada producto
-                const imagenesPromises = productosData.map(async (producto) => ({
-                    asin: producto.asin,
-                    url: await cargarImagen(producto.product_photo)
-                }));
-                const imagenesResultados = await Promise.all(imagenesPromises);
-                const imagenesObj = {};
-                imagenesResultados.forEach(({ asin, url }) => {
-                    imagenesObj[asin] = url;
-                });
-                setImagenes(imagenesObj);
+                await cargarProductos(1, '');
             } catch (error) {
                 setError('Ocurrió un error al cargar los productos');
                 console.error('Error loading products:', error);
@@ -56,15 +73,19 @@ export const useMantenedorProductoListPage = () => {
 
     const handleBuscarClick = async (e) => {
         try{
-            const search = searchText.trim().length > 0 ? `?search=${searchText}` : '';
             setError(null);
-            const response = await sendRequest(`/api/productos${search}`);
-            const { products: productosData, total: totalProductos, page: pagina } = normalizeProductsResponse(response);
-            setProductos(productosData);
-            setTotal(totalProductos);
-            setPage(pagina);
+            await cargarProductos(1, searchText.trim());
         }catch(error){
             addToast('Ocurrió un error al filtrar los datos', 'error')
+        }
+    }
+
+    const handlePageChange = async (pageToLoad) => {
+        try{
+            setError(null);
+            await cargarProductos(pageToLoad, searchText.trim());
+        }catch(error){
+            addToast('Ocurrió un error al cargar los productos', 'error')
         }
     }
 
@@ -109,15 +130,17 @@ export const useMantenedorProductoListPage = () => {
         productos,
         imagenes,
         total,
+        totalPages,
         page,
+        isLoading,
         handleBtnNuevo,
         handleBuscarClick,
+        handlePageChange,
         handleInputChange,
         handleInputKeyDown,
         handleEditarClick,
         handleEliminarClick,
         searchText,
-        error,
-        state
+        error
     }
 }

@@ -6,17 +6,19 @@ import {
     isSuccessfulStatus,
     API_ERROR_MESSAGE,
 } from '../utils/apiResponse';
+import { buildProductsQuery } from '../utils/productsQuery';
 
 // Acción para el reducer
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos en ms
 
 // Estado inicial
 const initialState = {
-  productsCache: {}, // Cache para listados: { [asin]: { data: product, timestamp } }
+  productsCache: {}, // Cache para listados: { [search|page]: { data: payload, timestamp } }
   productDetailCache: {}, // Cache para detalles: { [asin]: { data: productDetail, timestamp } }
   products: [], // Lista actual de productos
   total: 0, // Total de productos reportados por la API (totProd)
-  page: 1, // Página actual reportada por la API
+  totalPages: 0, // Total de páginas reportados por la API (totPages)
+  page: 1, // Página actual
   status: null, // Estado devuelto por la API ("success")
   loading: false,
   error: null,
@@ -36,7 +38,12 @@ const initialState = {
 // Contexto
 const ProductContext = createContext();
 
-const isCacheEntryValid = (entry) =>
+const isListCacheEntryValid = (entry) =>
+    !!entry
+    && typeof entry.timestamp === 'number'
+    && Array.isArray(entry.data?.products);
+
+const isDetailCacheEntryValid = (entry) =>
     !!entry && typeof entry.timestamp === 'number' && !!entry.data;
 
 // Reducer para manejar acciones
@@ -47,19 +54,19 @@ function productReducer(state, action) {
     case 'SET_ERROR':
       return { ...state, loading: false, error: action.payload };
     case 'CACHE_PRODUCT_LIST':
-      // Cachea productos del listado (array de productos)
-      const productsToCache = action.payload?.products;
-      if (!Array.isArray(productsToCache)) {
+      // Cachea el listado de una página (clave: busqueda|página)
+      const cacheKey = action.payload?.cacheKey;
+      const payloadToCache = action.payload?.payload;
+      if (!cacheKey || !Array.isArray(payloadToCache?.products)) {
         return { ...state, loading: false };
       }
-      const updatedProductsCache = { ...state.productsCache };
-      productsToCache.forEach(product => {
-        if (!product?.asin) return;
-        updatedProductsCache[product.asin] = {
-          data: product,
+      const updatedProductsCache = {
+        ...state.productsCache,
+        [cacheKey]: {
+          data: payloadToCache,
           timestamp: Date.now(),
-        };
-      });
+        },
+      };
       localStorage.setItem('productListCache', JSON.stringify(updatedProductsCache));
       return { ...state, productsCache: updatedProductsCache, loading: false };
     case 'CACHE_PRODUCT_DETAIL':
@@ -82,12 +89,12 @@ function productReducer(state, action) {
       const now = Date.now();
       const filteredProductsCache = Object.fromEntries(
         Object.entries(state.productsCache).filter(
-          ([, entry]) => isCacheEntryValid(entry) && now - entry.timestamp < CACHE_TTL
+          ([, entry]) => isListCacheEntryValid(entry) && now - entry.timestamp < CACHE_TTL
         )
       );
       const filteredDetailCache = Object.fromEntries(
         Object.entries(state.productDetailCache).filter(
-          ([, entry]) => isCacheEntryValid(entry) && now - entry.timestamp < CACHE_TTL
+          ([, entry]) => isDetailCacheEntryValid(entry) && now - entry.timestamp < CACHE_TTL
         )
       );
       localStorage.setItem('productListCache', JSON.stringify(filteredProductsCache));
@@ -103,6 +110,7 @@ function productReducer(state, action) {
         ...state,
         products: Array.isArray(action.payload?.products) ? action.payload.products : [],
         total: action.payload?.total ?? 0,
+        totalPages: action.payload?.totalPages ?? 0,
         page: action.payload?.page ?? 1,
         status: action.payload?.status ?? null,
         loading: false,
@@ -153,39 +161,42 @@ export function ProductProvider({ children }) {
     }
   };
 
-  // Función para obtener todos los productos (listado, con cache)
-  const getAllProducts = async (searchParams) => {
+  // Función para obtener los productos de una página (listado, con cache)
+  const getAllProducts = async (searchParams, page = 1) => {
     dispatch({ type: 'CLEAR_EXPIRED_CACHE' }); // Limpia expirados primero
 
-    // Verifica si hay productos en cache (al menos algunos)
-    const cachedProducts = Object.values(state.productsCache).filter(isCacheEntryValid);
-    if (cachedProducts.length > 0 && cachedProducts.every(p => Date.now() - p.timestamp < CACHE_TTL)) {
-      const productsList = cachedProducts.map(p => p.data); // Retorna lista desde cache
-      const cachedPayload = {
-        products: productsList,
-        total: productsList.length,
-        page: 1,
-        status: 'success',
-      };
-      dispatch({ type: 'SET_PRODUCTS', payload: cachedPayload });
-      return cachedPayload;
+    const search = String(searchParams ?? state.filter ?? '');
+    const currentPage = Number(page) >= 1 ? Math.floor(Number(page)) : 1;
+    const cacheKey = `${search}|${currentPage}`;
+
+    // Verifica si hay productos en cache para esa búsqueda y página
+    const cached = state.productsCache[cacheKey];
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      dispatch({ type: 'SET_PRODUCTS', payload: cached.data });
+      return cached.data;
     }
 
-    searchParams = searchParams ?? state.filter;
-    const search = searchParams  ? `?search=${searchParams}` :'';
+    const query = buildProductsQuery({ search, page: currentPage });
 
     // Si no hay cache válido, fetch desde API
     dispatch({ type: 'SET_LOADING' });
     try {
-      const response = await sendRequest('/api/productos' + search, 'GET');
-      const { status, products, total, page } = normalizeProductsResponse(response);
+      const response = await sendRequest(`/api/productos${query}`, 'GET');
+      const { status, products, total, totalPages, page: responsePage } = normalizeProductsResponse(response);
       if (!isSuccessfulStatus(status)) {
         throw new Error(API_ERROR_MESSAGE);
       }
-      dispatch({ type: 'CACHE_FILTER', payload: { filter: searchParams || '' } });
-      dispatch({ type: 'CACHE_PRODUCT_LIST', payload: { products } });
-      dispatch({ type: 'SET_PRODUCTS', payload: { products, total, page, status } });
-      return { products, total, page, status };
+      const payload = {
+        products,
+        total,
+        totalPages,
+        page: responsePage ?? currentPage,
+        status,
+      };
+      dispatch({ type: 'CACHE_FILTER', payload: { filter: search } });
+      dispatch({ type: 'CACHE_PRODUCT_LIST', payload: { cacheKey, payload } });
+      dispatch({ type: 'SET_PRODUCTS', payload });
+      return payload;
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;

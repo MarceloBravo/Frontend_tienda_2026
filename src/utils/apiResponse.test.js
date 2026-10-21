@@ -5,7 +5,7 @@ import {
 } from './apiResponse';
 
 describe('normalizeProductsResponse', () => {
-    it('unwraps the new envelope with status, data, totProd and page (happy path)', () => {
+    it('unwraps the new envelope with status, data, totProd, totPages and page (happy path)', () => {
         const response = {
             status: 'success',
             data: [
@@ -18,7 +18,8 @@ describe('normalizeProductsResponse', () => {
                 },
             ],
             totProd: 42,
-            page: 1,
+            totPages: 7,
+            page: 2,
         };
 
         expect(normalizeProductsResponse(response)).toEqual({
@@ -33,7 +34,8 @@ describe('normalizeProductsResponse', () => {
                 },
             ],
             total: 42,
-            page: 1,
+            totalPages: 7,
+            page: 2,
         });
     });
 
@@ -42,7 +44,8 @@ describe('normalizeProductsResponse', () => {
             status: null,
             products: [],
             total: 0,
-            page: 1,
+            totalPages: 0,
+            page: null,
         });
     });
 
@@ -51,15 +54,17 @@ describe('normalizeProductsResponse', () => {
             status: null,
             products: [],
             total: 0,
-            page: 1,
+            totalPages: 0,
+            page: null,
         });
     });
 
     it('returns an empty list when data is null (edge case)', () => {
-        expect(normalizeProductsResponse({ status: 'success', data: null, totProd: 0, page: 1 })).toEqual({
+        expect(normalizeProductsResponse({ status: 'success', data: null, totProd: 0, totPages: 0, page: 1 })).toEqual({
             status: 'success',
             products: [],
             total: 0,
+            totalPages: 0,
             page: 1,
         });
     });
@@ -69,6 +74,7 @@ describe('normalizeProductsResponse', () => {
 
         expect(result.products).toEqual([]);
         expect(result.total).toBe(0);
+        expect(result.totalPages).toBe(0);
     });
 
     it('accepts a plain array as the response (legacy shape)', () => {
@@ -78,6 +84,7 @@ describe('normalizeProductsResponse', () => {
             status: 'success',
             products,
             total: 1,
+            totalPages: 1,
             page: 1,
         });
     });
@@ -85,11 +92,12 @@ describe('normalizeProductsResponse', () => {
     it('accepts an already normalized response', () => {
         const products = [{ asin: 'A1' }];
 
-        expect(normalizeProductsResponse({ products, total: 7, page: 3 })).toEqual({
+        expect(normalizeProductsResponse({ products, total: 7, totalPages: 3 })).toEqual({
             status: null,
             products,
             total: 7,
-            page: 3,
+            totalPages: 3,
+            page: null,
         });
     });
 
@@ -105,16 +113,28 @@ describe('normalizeProductsResponse', () => {
         expect(result.total).toBe(0);
     });
 
-    it('forces the page to be at least 1 (edge case)', () => {
-        const result = normalizeProductsResponse({ status: 'success', data: [], totProd: 0, page: 0 });
+    it('returns zero pages when totPages is missing (edge case)', () => {
+        const result = normalizeProductsResponse({ status: 'success', data: [{ asin: 'A1' }], page: 1 });
 
-        expect(result.page).toBe(1);
+        expect(result.totalPages).toBe(0);
     });
 
-    it('keeps the reported page (happy path)', () => {
-        const result = normalizeProductsResponse({ status: 'success', data: [], totProd: 0, page: 5 });
+    it('ignores a negative totPages (edge case)', () => {
+        const result = normalizeProductsResponse({ status: 'success', data: [], totProd: 0, totPages: -4, page: 1 });
 
-        expect(result.page).toBe(5);
+        expect(result.totalPages).toBe(0);
+    });
+
+    it('returns a null page when the response has no page (edge case)', () => {
+        const result = normalizeProductsResponse({ status: 'success', data: [], totProd: 0, totPages: 1 });
+
+        expect(result.page).toBeNull();
+    });
+
+    it('ignores an invalid page (negative case)', () => {
+        const result = normalizeProductsResponse({ status: 'success', data: [], totProd: 0, totPages: 1, page: 0 });
+
+        expect(result.page).toBeNull();
     });
 });
 

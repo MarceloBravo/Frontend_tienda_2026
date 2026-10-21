@@ -1,5 +1,6 @@
 import { SpinnerComponent } from '../../../components/spinner/SpinnerComponent';
 import { EmptyStateComponent } from '../../../components/emptyState/EmptyStateComponent';
+import { PaginationComponent } from '../../../components/pagination/PaginationComponent';
 import { useMantenedorProductoListPage } from './useMantenedorProductoListPage';
 
 import styles from './MantenedorProductoListPage.module.css';
@@ -9,19 +10,21 @@ export const MantenedorProductoListPage = () => {
         productos,
         imagenes,
         total,
+        totalPages,
         page,
+        isLoading,
         handleBtnNuevo,
         handleBuscarClick,
+        handlePageChange,
         handleInputChange,
         handleInputKeyDown,
         handleEditarClick,
         handleEliminarClick,
-        searchText, 
-        error,
-        state
+        searchText,
+        error
     } = useMantenedorProductoListPage();
 
-    if(state.isLoading) return <SpinnerComponent/>
+    if(isLoading) return <SpinnerComponent/>
     if(error) return <EmptyStateComponent message={error} />
 
     return (
@@ -34,8 +37,8 @@ export const MantenedorProductoListPage = () => {
                     <input 
                         type="text" 
                         className={styles.inputSearch} 
-                        placeholder="Buscar producto..." 
-                        value={searchText} 
+                        placeholder='Buscar producto...' 
+                        value={searchText}
                         onChange={handleInputChange}
                         onKeyDown={e => handleInputKeyDown(e)}
                     />
@@ -44,7 +47,7 @@ export const MantenedorProductoListPage = () => {
             </div>
 
             <div className={styles.tabla}>
-                <p>Total de productos: {total} — Página: {page}</p>
+                <p>Total de productos: {total} — Página: {page} de {totalPages}</p>
                 <table>
                     <thead>
                         <tr>
@@ -84,6 +87,12 @@ export const MantenedorProductoListPage = () => {
 
                     </tbody>
                 </table>
+
+                <PaginationComponent
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
             </div>
         </div>
     )
