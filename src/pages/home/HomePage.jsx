@@ -4,14 +4,20 @@ import { SpinnerComponent } from '../../components/spinner/SpinnerComponent';
 import { ProductCard } from '../../components/productCard/ProductCard';
 import { EmptyStateComponent } from '../../components/emptyState/EmptyStateComponent';
 import { PaginationComponent } from '../../components/pagination/PaginationComponent';
-import { useProducts } from '../../contexts/ProductContext';
+import { useProductStore } from '../../store/productStore';
 
 import styles from './HomePage.module.css'
 
 export const HomePage = () => {
-    const { state, getAllProducts} = useProducts();
+    const products = useProductStore((state) => state.products);
+    const loading = useProductStore((state) => state.loading);
+    const error = useProductStore((state) => state.error);
+    const filter = useProductStore((state) => state.filter);
+    const page = useProductStore((state) => state.page);
+    const totalPages = useProductStore((state) => state.totalPages);
+    const getAllProducts = useProductStore((state) => state.getAllProducts);
     const location = useLocation();
-    const products = state.products ?? [];
+    const productsList = products ?? [];
 
     useEffect(() => {
         const getAll = async () => {
@@ -23,37 +29,36 @@ export const HomePage = () => {
         }
         
         getAll();
-        // eslint-disable-next-line
-    }, [location.pathname]);
+    }, [location.pathname, getAllProducts]);
 
-    const handlePageChange = async (page) => {
+    const handlePageChange = async (nextPage) => {
         try {
-            await getAllProducts(state.filter, page);
+            await getAllProducts(filter, nextPage);
         } catch (error) {
             console.error('Error loading products:', error);
         }
     }
 
-    if (state.loading) return <SpinnerComponent />;
-    if (state.error) return <EmptyStateComponent message={`Error: ${state.error}`} />;
+    if (loading) return <SpinnerComponent />;
+    if (error) return <EmptyStateComponent message={`Error: ${error}`} />;
 
     return (
         <>
             <h2>Las mejores ofertas en smartphones</h2>
-            {products.length === 0 ? (
-                <EmptyStateComponent message={state.filter
+            {productsList.length === 0 ? (
+                <EmptyStateComponent message={filter
                     ? 'No se encontraron productos para tu búsqueda'
                     : 'No hay productos disponibles'} />
             ) : (
                 <>
                     <div className={styles.productsGrid}>
-                        {products.map(product => 
+                        {productsList.map(product => 
                             <ProductCard key={product.asin} {...product}/>
                         )}
                     </div>
                     <PaginationComponent
-                        currentPage={state.page}
-                        totalPages={state.totalPages}
+                        currentPage={page}
+                        totalPages={totalPages}
                         onPageChange={handlePageChange}
                     />
                 </>

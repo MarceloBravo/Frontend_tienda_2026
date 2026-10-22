@@ -1,13 +1,20 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import { AppProviders } from './contexts/AppProviders';
 import instance from './axios/axiosInstance';
+import { useProductStore, createInitialProductState } from './store/productStore';
 
 jest.mock('./axios/axiosInstance', () => ({
     __esModule: true,
-    default: jest.fn(() => Promise.resolve({ status: 'success', data: [], totProd: 0, page: 1 })),
+    default: jest.fn(() => Promise.resolve({
+        data: { status: 'success', data: [], totProd: 0, totPages: 0, page: 1 },
+    })),
     injectStore: jest.fn(),
 }));
+
+const emptyResponse = {
+    data: { status: 'success', data: [], totProd: 0, totPages: 0, page: 1 },
+};
 
 const renderApp = () => render(
     <AppProviders>
@@ -18,8 +25,9 @@ const renderApp = () => render(
 describe('App', () => {
     beforeEach(() => {
         localStorage.clear();
+        useProductStore.setState(createInitialProductState());
         instance.mockReset();
-        instance.mockImplementation(() => Promise.resolve({ status: 'success', data: [], totProd: 0, page: 1 }));
+        instance.mockImplementation(() => Promise.resolve(emptyResponse));
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -31,7 +39,9 @@ describe('App', () => {
         renderApp();
 
         expect(await screen.findByText('MyStore')).toBeInTheDocument();
-        expect(await screen.findByText('Las mejores ofertas en smartphones')).toBeInTheDocument();
+        await waitFor(() => expect(instance).toHaveBeenCalled());
+        expect(await screen.findByText('No hay productos disponibles')).toBeInTheDocument();
+        expect(screen.getByText('Las mejores ofertas en smartphones')).toBeInTheDocument();
     });
 
     it('shows the empty state when the API returns no products', async () => {

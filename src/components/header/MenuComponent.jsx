@@ -13,7 +13,7 @@ export const MenuComponent = () => {
     handleKeyDown,
     handleBtnBuscarClick,
     favoritos,
-    state,
+    loading,
     location,
     userSession,
     endSession
@@ -21,7 +21,7 @@ export const MenuComponent = () => {
 
   return (
     <>
-      {state.loading && <SpinnerComponent />}
+      {loading && <SpinnerComponent />}
       <header className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>

@@ -5,8 +5,8 @@ import { cargarImagen } from '../../utils/images';
 
 const mockSetContadorFavoritos = jest.fn();
 
-jest.mock('../../contexts/ProductContext', () => ({
-    useProducts: () => ({ setContadorFavoritos: mockSetContadorFavoritos }),
+jest.mock('../../store/productStore', () => ({
+    useProductStore: (selector) => selector({ setContadorFavoritos: mockSetContadorFavoritos }),
 }));
 
 jest.mock('../../utils/images', () => ({

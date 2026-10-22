@@ -1,14 +1,16 @@
 import { useContext, useEffect, useState } from 'react';
-import { useProducts } from '../../contexts/ProductContext';
+import { useProductStore } from '../../store/productStore';
 import { useLocation } from 'react-router';
 import AuthContext from '../../contexts/AuthContext';
 
 export const useMenuComponent = () => {
   const { logout } = useContext(AuthContext);
-  const { state, getAllProducts, getFavoritosCount } = useProducts();
+  const favoritos = useProductStore((state) => state.favoritos);
+  const loading = useProductStore((state) => state.loading);
+  const getAllProducts = useProductStore((state) => state.getAllProducts);
+  const setContadorFavoritos = useProductStore((state) => state.setContadorFavoritos);
   const { userSession } = useContext(AuthContext)
   const [ searchText, setSearchText ] = useState(localStorage.getItem('filter') || '');
-  const [ favoritos, setFavoritos ] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
 
@@ -28,20 +30,18 @@ export const useMenuComponent = () => {
       if(fav){
         try {
           const parsed = JSON.parse(fav)
-          setFavoritos(Array.isArray(parsed) ? parsed.length : 0)
+          setContadorFavoritos(Array.isArray(parsed) ? parsed.length : 0)
         } catch {
-          setFavoritos(0)
+          setContadorFavoritos(0)
         }
+      } else {
+        setContadorFavoritos(0)
       }
     }
     checkFavoritos()
     window.addEventListener('storage', checkFavoritos)
     return () => window.removeEventListener('storage', checkFavoritos)
-  },[])
-  
-  useEffect(()=> {
-    setFavoritos(getFavoritosCount() || 0)
-  },[getFavoritosCount])
+  },[setContadorFavoritos])
 
   
   const handleSearchChange = (e) => {
@@ -80,7 +80,7 @@ export const useMenuComponent = () => {
     handleKeyDown,
     handleBtnBuscarClick,
     favoritos,
-    state,
+    loading,
     location,
     userSession,
     endSession

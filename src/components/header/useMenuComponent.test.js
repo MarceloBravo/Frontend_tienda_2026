@@ -1,23 +1,21 @@
 import { renderHook, act } from '@testing-library/react';
 import { useMenuComponent } from './useMenuComponent';
 import AuthContext from '../../contexts/AuthContext';
+import { useProductStore, createInitialProductState } from '../../store/productStore';
 
 const mockLogout = jest.fn();
 const mockGetAllProducts = jest.fn();
-const mockGetFavoritosCount = jest.fn();
-const mockState = { loading: false, products: [] };
 
 jest.mock('react-router', () => ({
     useLocation: () => ({ pathname: '/' }),
 }));
 
-jest.mock('../../contexts/ProductContext', () => ({
-    useProducts: () => ({
-        state: mockState,
+const resetProductStore = () => {
+    useProductStore.setState({
+        ...createInitialProductState(),
         getAllProducts: mockGetAllProducts,
-        getFavoritosCount: mockGetFavoritosCount,
-    }),
-}));
+    });
+};
 
 const createWrapper = (userSession) => ({ children }) => (
     <AuthContext.Provider value={{ logout: mockLogout, userSession }}>
@@ -30,7 +28,7 @@ describe('useMenuComponent', () => {
         localStorage.clear();
         mockLogout.mockReset();
         mockGetAllProducts.mockReset().mockResolvedValue([]);
-        mockGetFavoritosCount.mockReset().mockReturnValue(2);
+        resetProductStore();
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -48,6 +46,9 @@ describe('useMenuComponent', () => {
     });
 
     it('gets the favorites count on mount (happy path)', () => {
+        localStorage.setItem('favoritos', JSON.stringify([{ asin: 'A1' }, { asin: 'A2' }]));
+        resetProductStore();
+
         const { result } = renderHook(() => useMenuComponent(), {
             wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
         });
@@ -123,7 +124,8 @@ describe('useMenuComponent', () => {
 
     it('handles a corrupted favorites entry in localStorage (edge case)', () => {
         localStorage.setItem('favoritos', 'no-es-json');
-        mockGetFavoritosCount.mockReturnValue(0);
+        resetProductStore();
+
         const { result } = renderHook(() => useMenuComponent(), {
             wrapper: createWrapper({ isLoggedIn: false, user: null }),
         });
@@ -132,7 +134,6 @@ describe('useMenuComponent', () => {
     });
 
     it('updates the favorites count on a storage event', () => {
-        mockGetFavoritosCount.mockReturnValue(0);
         const { result } = renderHook(() => useMenuComponent(), {
             wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
         });

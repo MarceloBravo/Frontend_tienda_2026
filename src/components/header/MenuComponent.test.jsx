@@ -2,19 +2,17 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router';
 import { MenuComponent } from './MenuComponent';
 import AuthContext from '../../contexts/AuthContext';
+import { useProductStore, createInitialProductState } from '../../store/productStore';
 
 const mockLogout = jest.fn();
 const mockGetAllProducts = jest.fn();
-const mockGetFavoritosCount = jest.fn();
-const mockState = { loading: false, products: [] };
 
-jest.mock('../../contexts/ProductContext', () => ({
-    useProducts: () => ({
-        state: mockState,
+const resetProductStore = () => {
+    useProductStore.setState({
+        ...createInitialProductState(),
         getAllProducts: mockGetAllProducts,
-        getFavoritosCount: mockGetFavoritosCount,
-    }),
-}));
+    });
+};
 
 const loggedOut = { isLoggedIn: false, user: null, accessToken: null };
 const loggedIn = { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' };
@@ -32,7 +30,7 @@ describe('MenuComponent', () => {
         localStorage.clear();
         mockLogout.mockReset().mockResolvedValue();
         mockGetAllProducts.mockReset().mockResolvedValue([]);
-        mockGetFavoritosCount.mockReset().mockReturnValue(2);
+        resetProductStore();
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -83,6 +81,8 @@ describe('MenuComponent', () => {
     });
 
     it('shows the favorites counter from the store', () => {
+        localStorage.setItem('favoritos', JSON.stringify([{ asin: 'A1' }, { asin: 'A2' }]));
+        resetProductStore();
         renderMenu(loggedIn);
 
         expect(screen.getByText('2')).toBeInTheDocument();

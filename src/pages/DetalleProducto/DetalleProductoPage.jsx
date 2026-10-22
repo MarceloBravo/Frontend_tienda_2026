@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useProducts } from '../../contexts/ProductContext.jsx'
+import { useProductStore } from '../../store/productStore'
 import { useParams } from 'react-router'
 import { SpinnerComponent } from '../../components/spinner/SpinnerComponent.jsx'
-import { EmptyStateComponent } from '../../components/emptyState/EmptyStateComponent.jsx'
+import { EmptyStateComponent } from '../../components/emptyState/EmptyStateComponent.jsx';
+import { useShoppingCartStore } from '../../store/shoppingCartStore';
 
 import styles from './DetalleProductoPage.module.css'
 
 export const DetalleProductoPage = () => {
     const params = useParams()
     const id = params.id
-    const { state, getProduct } = useProducts();
-    const [ producto, setProducto ] = useState(null)
+    const loading = useProductStore((state) => state.loading);
+    const error = useProductStore((state) => state.error);
+    const getProduct = useProductStore((state) => state.getProduct);
+    const [ producto, setProducto ] = useState(null);
+    const addToCart = useShoppingCartStore(store => store.addToCart);
 
     useEffect(()=> {
         const obtenerProducto = async () => {
@@ -25,8 +29,17 @@ export const DetalleProductoPage = () => {
         // eslint-disable-next-line
     },[id])
 
-    if(state.loading) return <SpinnerComponent/>
-    if(state.error) return <EmptyStateComponent message={`Error: ${state.error}`} />
+    const addItemToCart = (id, cant = 1) => {
+        //CheckStock
+        
+        //add prodt to cart
+        addToCart(id, cant);
+
+        //notify
+    }
+
+    if(loading) return <SpinnerComponent/>
+    if(error) return <EmptyStateComponent message={`Error: ${error}`} />
     if(!producto) return <EmptyStateComponent message="Producto no encontrado" />
 
 
@@ -51,7 +64,7 @@ export const DetalleProductoPage = () => {
                     {producto.is_best_seller && <span className={`${styles.badge} ${styles.bestSeller}`}>Best Seller</span>}
                     {producto.climate_pledge_friendly && <span className={`${styles.badge} ${styles.climatePledge}`}>Climate Pledge Friendly</span>}
                 </div>
-                <button className={styles.addToCartButton}>Add to Cart</button>
+                <button className={styles.addToCartButton} click={addItemToCart}>Add to Cart</button>
                 <p className={styles.deliveryInfo}>{producto.delivery}</p>
             </div>
         </div>

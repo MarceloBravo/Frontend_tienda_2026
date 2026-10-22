@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useProducts } from '../../contexts/ProductContext';
+import { useProductStore } from '../../store/productStore';
 import { cargarImagen } from '../../utils/images';
 
 
@@ -11,7 +11,7 @@ export const useProductCard = ({...data}) => {
         ? `${currency} ${product_price ?? ''}`.trim()
         : `$ ${product_price ?? ''}`;
     const [isFavorite, setIsFavorite] = useState(false);
-    const { setContadorFavoritos } = useProducts();
+    const setContadorFavoritos = useProductStore((state) => state.setContadorFavoritos);
     const [ urlImagen, setUrlImagen ] = useState()
     const navigate = useNavigate();
 
