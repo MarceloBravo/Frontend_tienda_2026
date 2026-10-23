@@ -15,8 +15,7 @@ export const useMenuComponent = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const openCart = useShoppingCartStore(state => state.openCart);  
-  const productsInCart = useShoppingCartStore(state => state.productsInCart);
-  const [ countProductsInCart, setCountProductsInCart] = useState(0);
+  const countProductsInCart = useShoppingCartStore(state => state.productsInCart);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,10 +45,6 @@ export const useMenuComponent = () => {
     window.addEventListener('storage', checkFavoritos)
     return () => window.removeEventListener('storage', checkFavoritos)
   },[setContadorFavoritos])
-  
-  useEffect(() => {
-      setCountProductsInCart(productsInCart);
-  },[productsInCart])
 
   
   

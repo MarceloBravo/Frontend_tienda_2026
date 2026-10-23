@@ -1,12 +1,67 @@
 import { create } from "zustand";
 
+const CART_STORAGE_KEY = 'shopping_cart';
+
 const countProductsInCart = (products) =>
-    products.reduce((acum, item) => acum + item.cant, 0);
+    Array.isArray(products) ? products.reduce((acum, item) => acum + (Number(item?.cant) || 0), 0) : 0;
+
+const readJSON = (key, fallback) => {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        return JSON.parse(raw);
+    } catch {
+        return fallback;
+    }
+};
+
+const writeJSON = (key, value) => {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+        return null;
+    }
+};
+
+const getInitialCartState = () => {
+    const parsed = readJSON(CART_STORAGE_KEY, null);
+    if (!parsed || typeof parsed !== 'object') {
+        return { products: [], productsInCart: 0, isOpen: false };
+    }
+
+    const products = Array.isArray(parsed.products) ? parsed.products : [];
+    const productsInCart = Number.isFinite(Number(parsed.productsInCart))
+        ? Number(parsed.productsInCart)
+        : countProductsInCart(products);
+
+    return { products, productsInCart, isOpen: false };
+};
+
+const syncFromStorage = (set) => {
+    const parsed = readJSON(CART_STORAGE_KEY, null);
+    if (!parsed || typeof parsed !== 'object') {
+        set({ products: [], productsInCart: 0 });
+        return;
+    }
+
+    const products = Array.isArray(parsed.products) ? parsed.products : [];
+    const productsInCart = Number.isFinite(Number(parsed.productsInCart))
+        ? Number(parsed.productsInCart)
+        : countProductsInCart(products);
+
+    set({ products, productsInCart });
+};
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (e) => {
+        if (e.key === CART_STORAGE_KEY) {
+            syncFromStorage((state) => useShoppingCartStore.setState(state));
+        }
+    });
+}
 
 export const useShoppingCartStore = create((set, get) => ({
-    products: [],
-    isOpen: false,
-    productsInCart: 0,
+    ...getInitialCartState(),
 
     openCart: () => set({ isOpen: true }),
 
@@ -23,14 +78,17 @@ export const useShoppingCartStore = create((set, get) => ({
             const products = productExists
                 ? state.products.map(item =>
                     item.productId === productId
-                        ? { ...item, cant: item.cant + safeCant, name: item.name || name }
+                        ? { ...item, cant: (Number(item.cant) || 0) + safeCant, name: item.name || name }
                         : item
                 )
                 : [...state.products, { productId, cant: safeCant, name }];
 
+            const productsInCart = countProductsInCart(products);
+            writeJSON(CART_STORAGE_KEY, { products, productsInCart });
+
             return {
                 products,
-                productsInCart: countProductsInCart(products),
+                productsInCart,
             };
         });
     },
@@ -40,17 +98,20 @@ export const useShoppingCartStore = create((set, get) => ({
             const product = state.products.find(item => item.productId === productId);
             if (!product) return state;
 
-            const products = product.cant <= 1
+            const products = (Number(product.cant) || 0) <= 1
                 ? state.products.filter(item => item.productId !== productId)
                 : state.products.map(item =>
                     item.productId === productId
-                        ? { ...item, cant: item.cant - 1 }
+                        ? { ...item, cant: (Number(item.cant) || 0) - 1 }
                         : item
                 );
 
+            const productsInCart = countProductsInCart(products);
+            writeJSON(CART_STORAGE_KEY, { products, productsInCart });
+
             return {
                 products,
-                productsInCart: countProductsInCart(products),
+                productsInCart,
             };
         });
     },
@@ -58,10 +119,12 @@ export const useShoppingCartStore = create((set, get) => ({
     reemoveProduct: (productId) => {
         set(state => {
             const products = state.products.filter(prod => prod.productId !== productId);
+            const productsInCart = countProductsInCart(products);
+            writeJSON(CART_STORAGE_KEY, { products, productsInCart });
 
             return {
                 products,
-                productsInCart: countProductsInCart(products),
+                productsInCart,
             };
         });
     },
