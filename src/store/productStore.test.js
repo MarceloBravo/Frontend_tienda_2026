@@ -181,6 +181,37 @@ describe('productStore', () => {
         expect(instance).toHaveBeenCalledTimes(1);
     });
 
+    it('ignores the cached detail when forceRefresh is enabled (happy path)', async () => {
+        instance.mockResolvedValueOnce({
+            data: { status: 'success', data: { asin: 'A1', stock: 1 } },
+        });
+        await useProductStore.getState().getProduct('A1');
+
+        instance.mockResolvedValueOnce({
+            data: { status: 'success', data: { asin: 'A1', stock: 5 } },
+        });
+        const product = await useProductStore.getState().getProduct('A1', { forceRefresh: true });
+
+        expect(instance).toHaveBeenCalledTimes(2);
+        expect(product.stock).toBe(5);
+        expect(useProductStore.getState().productDetailCache.A1.data.stock).toBe(5);
+    });
+
+    it('does not toggle loading when the detail refresh is silent (edge case)', async () => {
+        instance.mockResolvedValueOnce({
+            data: { status: 'success', data: { asin: 'A1', stock: 3 } },
+        });
+        const loadingStates = [];
+        const unsubscribe = useProductStore.subscribe((state) => {
+            loadingStates.push(state.loading);
+        });
+
+        await useProductStore.getState().getProduct('A1', { forceRefresh: true, silent: true });
+
+        unsubscribe();
+        expect(loadingStates.every((loading) => loading === false)).toBe(true);
+    });
+
     it('throws when the detail request fails (API failure)', async () => {
         instance.mockRejectedValueOnce(new Error('Network Error'));
 

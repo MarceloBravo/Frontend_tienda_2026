@@ -16,7 +16,9 @@ export const MenuComponent = () => {
     loading,
     location,
     userSession,
-    endSession
+    endSession,
+    openCart,
+    countProductsInCart
   } = useMenuComponent();
 
   return (
@@ -68,8 +70,15 @@ export const MenuComponent = () => {
                       <li><button type="button" onClick={endSession}>Cerrar session</button></li>
                     </>
                   }
+                  <li className={styles.cartIcon}>
+                    <button type="button" onClick={openCart}>
+                      <span className={styles.icon}>🛒</span>
+                      <span className={styles.cartItemsCount}>{countProductsInCart}</span>
+                    </button>
+                  </li>
                 </ul>
               </div>
+              
           </div>
         </div>
       </header>

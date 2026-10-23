@@ -1,0 +1,160 @@
+.modalBackground{
+    background: rgba(0, 0, 0, 0.144);
+    top:0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 1500;
+    position: fixed;
+}
+
+.cart {
+    position: fixed;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    width: 33.333vw;
+    min-width: 320px;
+    max-width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background-color: #fff;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    transform: translateX(0);
+    transition: transform 400ms ease-in-out;
+}
+
+.closed {
+    transform: translateX(100%);
+    pointer-events: none;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.closeButton {
+    padding: 4px 8px;
+    border: none;
+    background: transparent;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.closeButton:focus-visible,
+.controlButton:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.controls {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+}
+
+.controlButton {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.quantity {
+    min-width: 20px;
+    text-align: center;
+}
+
+.empty {
+    margin-top: 24px;
+    color: #666;
+    text-align: center;
+}
+
+.buttonsContainer{
+    display: flex;
+    flex-direction: column;
+    padding: 2em;
+    gap: 10px;
+    bottom: 0px;
+}
+
+button{
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.btnPrimary{
+    background-color: rgb(0, 106, 255);
+    color: white;
+    border-color: rgb(0, 115, 255);
+}
+
+.btnPrimary:hover{
+    background-color: rgb(1, 1, 117);
+}
+
+.disabled {
+    background-color: grey;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .cart {
+        width: 100vw;
+        min-width: 100%;
+    }
+}

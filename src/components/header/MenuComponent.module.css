@@ -110,6 +110,24 @@
   font-weight: bold;
 }
 
+.cartIcon{
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.cartItemsCount {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: #000;
+  color: #fff;
+  border-radius: 50%;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
 .userMenu ul{
   display: flex;
   list-style-type: none

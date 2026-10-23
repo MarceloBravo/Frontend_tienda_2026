@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useProductStore } from '../../store/productStore';
 import { useLocation } from 'react-router';
 import AuthContext from '../../contexts/AuthContext';
+import { useShoppingCartStore } from '../../store/shoppingCartStore';
 
 export const useMenuComponent = () => {
   const { logout } = useContext(AuthContext);
@@ -13,6 +14,9 @@ export const useMenuComponent = () => {
   const [ searchText, setSearchText ] = useState(localStorage.getItem('filter') || '');
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const openCart = useShoppingCartStore(state => state.openCart);  
+  const productsInCart = useShoppingCartStore(state => state.productsInCart);
+  const [ countProductsInCart, setCountProductsInCart] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,7 +46,12 @@ export const useMenuComponent = () => {
     window.addEventListener('storage', checkFavoritos)
     return () => window.removeEventListener('storage', checkFavoritos)
   },[setContadorFavoritos])
+  
+  useEffect(() => {
+      setCountProductsInCart(productsInCart);
+  },[productsInCart])
 
+  
   
   const handleSearchChange = (e) => {
     setSearchText(e.target.value);
@@ -72,7 +81,6 @@ export const useMenuComponent = () => {
     }    
   }
 
-
   return {
     isScrolled,
     searchText,
@@ -83,6 +91,8 @@ export const useMenuComponent = () => {
     loading,
     location,
     userSession,
-    endSession
+    endSession,
+    openCart,
+    countProductsInCart
   }
 }

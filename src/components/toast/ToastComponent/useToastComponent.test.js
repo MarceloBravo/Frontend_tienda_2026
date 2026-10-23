@@ -31,7 +31,8 @@ describe('useToastComponent', () => {
         expect(result.current.getToastClass()).toBe(expectedClass);
     });
 
-    it('hides the toast and removes it from the store on hideToast', () => {
+    it('hides the toast and removes it from the store after the exit animation', () => {
+        jest.useFakeTimers();
         useToastStore.setState({ toastArray: [{ message: 'Mensaje', type: 'success', index: 0 }] });
         const { result } = renderHook(() => useToastComponent('Mensaje', 'success', 0));
 
@@ -39,11 +40,18 @@ describe('useToastComponent', () => {
             result.current.hideToast();
         });
 
+        expect(result.current.isClosing).toBe(true);
+
+        act(() => {
+            jest.advanceTimersByTime(400);
+        });
+
         expect(result.current.isVisible).toBe(false);
         expect(useToastStore.getState().toastArray).toHaveLength(0);
     });
 
     it('does not remove other toasts when hiding one (multi toast edge case)', () => {
+        jest.useFakeTimers();
         useToastStore.setState({
             toastArray: [
                 { message: 'Uno', type: 'success', index: 0 },
@@ -54,6 +62,7 @@ describe('useToastComponent', () => {
 
         act(() => {
             result.current.hideToast();
+            jest.advanceTimersByTime(400);
         });
 
         expect(useToastStore.getState().toastArray).toHaveLength(1);
@@ -69,6 +78,10 @@ describe('useToastComponent', () => {
                 jest.advanceTimersByTime(1000);
             });
         }
+
+        act(() => {
+            jest.advanceTimersByTime(400);
+        });
 
         expect(result.current.isVisible).toBe(false);
         expect(useToastStore.getState().toastArray).toHaveLength(0);

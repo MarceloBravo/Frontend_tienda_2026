@@ -115,15 +115,18 @@ export const useProductStore = create((set, get) => ({
         });
     },
 
-    getProduct: async (productId) => {
+    getProduct: async (productId, { forceRefresh = false, silent = false } = {}) => {
         get().clearExpiredCache();
 
         const cached = get().productDetailCache[productId];
-        if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_TTL) {
             return cached.data;
         }
 
-        set({ loading: true, error: null });
+        if (!silent) {
+            set({ loading: true, error: null });
+        }
+
         try {
             const response = await instance({
                 url: `/api/productos/${productId}`,
@@ -143,8 +146,11 @@ export const useProductStore = create((set, get) => ({
                     },
                 };
                 writeStorage(PRODUCT_DETAIL_CACHE_KEY, JSON.stringify(updatedDetailCache));
-                set({ productDetailCache: updatedDetailCache, loading: false });
-            } else {
+                set({
+                    productDetailCache: updatedDetailCache,
+                    ...(silent ? {} : { loading: false }),
+                });
+            } else if (!silent) {
                 set({ loading: false });
             }
 

@@ -28,11 +28,18 @@ describe('ToastComponent', () => {
         expect(screen.getByText('Mensaje').parentElement).toHaveClass(expectedClass);
     });
 
-    it('removes the toast from the store when the close button is clicked', () => {
+    it('removes the toast from the store after the exit animation when the close button is clicked', () => {
+        jest.useFakeTimers();
         useToastStore.setState({ toastArray: [{ message: 'Mensaje', type: 'success', index: 0 }] });
         render(<ToastComponent message="Mensaje" type="success" index={0} />);
 
         fireEvent.click(screen.getByRole('button'));
+
+        expect(useToastStore.getState().toastArray).toHaveLength(1);
+
+        act(() => {
+            jest.advanceTimersByTime(400);
+        });
 
         expect(useToastStore.getState().toastArray).toHaveLength(0);
     });
@@ -53,6 +60,10 @@ describe('ToastComponent', () => {
                 jest.advanceTimersByTime(1000);
             });
         }
+
+        act(() => {
+            jest.advanceTimersByTime(400);
+        });
 
         expect(useToastStore.getState().toastArray).toHaveLength(0);
     });

@@ -1,9 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToastStore } from '../../../store/toastStore';
+
+const TOAST_ANIMATION_DURATION = 400;
 
 export const useToastComponent = (message, type, index) => {
   const [isVisible, setIsVisible] = useState(true);
+  const [isClosing, setIsClosing] = useState(false);
   const removeToast = useToastStore(store => store.removeToast);
+  const isClosingRef = useRef(false);
+  const removeTimeoutRef = useRef(null);
   const [timeLeft, setTimeLeft] = useState(5000); // 5 seconds in milliseconds  
   const getToastClass = () => {
     switch (type) {
@@ -18,10 +23,26 @@ export const useToastComponent = (message, type, index) => {
     }
   };
 
+  const hideToast = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    setIsClosing(true);
+
+    removeTimeoutRef.current = setTimeout(() => {
+      setIsVisible(false);
+      removeToast(index);
+    }, TOAST_ANIMATION_DURATION);
+  };
+
+  useEffect(() => {
+    return () => clearTimeout(removeTimeoutRef.current);
+  }, []);
+
   useEffect(()=> {
-    if(!isVisible) return;
+    if(!isVisible || isClosing) return;
     if(timeLeft === 0){
         hideToast();
+        return;
     };
     const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1000);
@@ -29,13 +50,7 @@ export const useToastComponent = (message, type, index) => {
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line
-  },[timeLeft, isVisible]);
+  },[timeLeft, isVisible, isClosing]);
 
-
-    const hideToast = () => {
-      setIsVisible(false);
-      removeToast(index);
-    };
-
-    return { isVisible, hideToast, getToastClass };
+    return { isVisible, isClosing, hideToast, getToastClass };
 };

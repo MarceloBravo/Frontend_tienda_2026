@@ -8,6 +8,29 @@
     border-radius: 5px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
     word-break: break-word;
+    animation: toastSlideIn 400ms ease-in-out both;
+}
+
+.closing {
+    animation: toastSlideOut 400ms ease-in-out both;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(calc(100% + 24px));
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(calc(100% + 24px));
+    }
 }
 
 .toastContainer p{
