@@ -5,6 +5,12 @@ const mockNavigate = jest.fn();
 const mockSendRequest = jest.fn();
 const mockCargarImagen = jest.fn();
 const mockAddToast = jest.fn();
+const mockShowModal = jest.fn();
+const modalState = { responseModal: null };
+
+const mockSetResponse = jest.fn((response) => {
+    modalState.responseModal = response;
+});
 
 jest.mock('react-router', () => ({
     useNavigate: () => mockNavigate,
@@ -21,6 +27,21 @@ jest.mock('../../../utils/images', () => ({
 jest.mock('../../../store/toastStore', () => ({
     useToastStore: (selector) => selector({ addToast: mockAddToast }),
 }));
+
+jest.mock('../../../store/modalStore', () => ({
+    useModalStore: (selector) => selector({
+        showModal: mockShowModal,
+        responseModal: modalState.responseModal,
+        setResponse: mockSetResponse,
+    }),
+}));
+
+const respondModal = (rerender, response = true) => {
+    act(() => {
+        modalState.responseModal = response;
+        rerender();
+    });
+};
 
 const productos = [
     { asin: 'A1', currency: 'USD', product_price: 10, product_title: 'Uno', product_photo: 'p1.png' },
@@ -41,7 +62,9 @@ describe('useMantenedorProductoListPage', () => {
         mockSendRequest.mockReset().mockResolvedValue(apiResponse(productos));
         mockCargarImagen.mockReset().mockImplementation(async (photo) => `url-${photo}`);
         mockAddToast.mockReset();
-        jest.spyOn(window, 'confirm').mockReturnValue(true);
+        mockShowModal.mockReset();
+        mockSetResponse.mockClear();
+        modalState.responseModal = null;
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -214,56 +237,75 @@ describe('useMantenedorProductoListPage', () => {
     });
 
     it('deletes a product after confirming (happy path)', async () => {
-        const { result } = renderHook(() => useMantenedorProductoListPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoListPage());
         await waitFor(() => expect(result.current.productos).toHaveLength(2));
 
         mockSendRequest.mockResolvedValueOnce({ status: 'success' });
-        await act(async () => {
-            await result.current.handleEliminarClick('A1');
+        act(() => {
+            result.current.handleEliminarClick('A1');
         });
+        expect(mockShowModal).toHaveBeenCalledWith('Eliminar', '¿Está seguro de eliminar el producto?', 'delete');
 
-        expect(mockSendRequest).toHaveBeenCalledWith('/api/productos/A1', 'DELETE');
-        expect(result.current.productos).toHaveLength(1);
+        respondModal(rerender, true);
+
+        await waitFor(() => {
+            expect(mockSendRequest).toHaveBeenCalledWith('/api/productos/A1', 'DELETE');
+            expect(result.current.productos).toHaveLength(1);
+        });
         expect(result.current.imagenes).not.toHaveProperty('A1');
         expect(mockAddToast).toHaveBeenCalledWith('Producto eliminado exitosamente', 'success');
     });
 
     it('does not delete when the user cancels the confirmation (edge case)', async () => {
-        window.confirm.mockReturnValue(false);
-        const { result } = renderHook(() => useMantenedorProductoListPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoListPage());
         await waitFor(() => expect(result.current.productos).toHaveLength(2));
 
-        await act(async () => {
-            await result.current.handleEliminarClick('A1');
+        act(() => {
+            result.current.handleEliminarClick('A1');
         });
+        respondModal(rerender, false);
 
         expect(mockSendRequest).not.toHaveBeenCalledWith('/api/productos/A1', 'DELETE');
         expect(result.current.productos).toHaveLength(2);
     });
 
-    it('shows an error toast when the delete response is empty (negative case)', async () => {
+    it('does not delete on mount with a response left over from another page (regression)', async () => {
+        modalState.responseModal = true;
         const { result } = renderHook(() => useMantenedorProductoListPage());
         await waitFor(() => expect(result.current.productos).toHaveLength(2));
 
-        mockSendRequest.mockResolvedValueOnce(null);
-        await act(async () => {
-            await result.current.handleEliminarClick('A1');
-        });
+        expect(mockSendRequest).not.toHaveBeenCalledWith(expect.any(String), 'DELETE');
+    });
 
-        expect(mockAddToast).toHaveBeenCalledWith('No se pudo eliminar el producto', 'error');
+    it('shows an error toast when the delete response is empty (negative case)', async () => {
+        const { result, rerender } = renderHook(() => useMantenedorProductoListPage());
+        await waitFor(() => expect(result.current.productos).toHaveLength(2));
+
+        mockSendRequest.mockResolvedValueOnce(null);
+        act(() => {
+            result.current.handleEliminarClick('A1');
+        });
+        respondModal(rerender, true);
+
+        await waitFor(() => {
+            expect(mockAddToast).toHaveBeenCalledWith('No se pudo eliminar el producto', 'error');
+        });
         expect(result.current.productos).toHaveLength(2);
     });
 
     it('shows an error toast when the delete request rejects (API failure)', async () => {
-        const { result } = renderHook(() => useMantenedorProductoListPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoListPage());
         await waitFor(() => expect(result.current.productos).toHaveLength(2));
 
         mockSendRequest.mockRejectedValueOnce(new Error('Network Error'));
-        await act(async () => {
-            await result.current.handleEliminarClick('A1');
+        act(() => {
+            result.current.handleEliminarClick('A1');
         });
+        respondModal(rerender, true);
 
-        expect(mockAddToast).toHaveBeenCalledWith('Ocurrió un error al eliminar el producto', 'error');
+        await waitFor(() => {
+            expect(mockAddToast).toHaveBeenCalledWith('Ocurrió un error al eliminar el producto', 'error');
+        });
     });
 
     it('navigates to the edit page', () => {

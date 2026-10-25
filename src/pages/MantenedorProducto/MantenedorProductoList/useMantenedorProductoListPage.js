@@ -5,6 +5,7 @@ import { cargarImagen } from '../../../utils/images';
 import { normalizeProductsResponse } from '../../../utils/apiResponse';
 import { buildProductsQuery } from '../../../utils/productsQuery';
 import { useToastStore } from '../../../store/toastStore';
+import { useModalStore } from '../../../store/modalStore';
 
 export const useMantenedorProductoListPage = () => {
     const { sendRequest } = useHttp();
@@ -18,6 +19,10 @@ export const useMantenedorProductoListPage = () => {
     const [ error, setError ] = useState(null);
     const addToast = useToastStore(store => store.addToast);
     const navigate = useNavigate();
+    const [ id, setId ] = useState(null);
+    const showModal = useModalStore(store => store.showModal)
+    const responseModal = useModalStore(store => store.responseModal)
+    const setResponse = useModalStore(store => store.setResponse)
 
     const cargarProductos = async (pageToLoad = 1, search = '') => {
         setIsLoading(true);
@@ -67,6 +72,33 @@ export const useMantenedorProductoListPage = () => {
         // eslint-disable-next-line
     },[])
 
+    useEffect(()=>{
+        if(responseModal !== true || !id) return;
+        setResponse(null);
+        const deleteProduct = async () => {
+            try{
+                const response = await sendRequest(`/api/productos/${id}`, 'DELETE')
+                if (!response) {
+                    addToast('No se pudo eliminar el producto', 'error')
+                    return
+                }
+                setProductos(prev => prev.filter(producto => producto.asin !== id))
+                setTotal(prev => Math.max(0, prev - 1))
+                setImagenes(prev => {
+                    const restantes = { ...prev }
+                    delete restantes[id]
+                    return restantes
+                })
+                addToast('Producto eliminado exitosamente', 'success')
+            }catch(err){
+                addToast('Ocurrió un error al eliminar el producto', 'error')
+            }
+        }
+
+        deleteProduct();
+        // eslint-disable-next-line
+    },[responseModal, id, addToast]);
+
     const handleBtnNuevo = () => {
         navigate('/admin-producto/nuevo');
     }
@@ -104,25 +136,8 @@ export const useMantenedorProductoListPage = () => {
     }
 
     const handleEliminarClick = async (id) => {
-        if(window.confirm("¿Estás seguro de eliminar este producto?")){
-            try{
-                const response = await sendRequest(`/api/productos/${id}`, 'DELETE')
-                if (!response) {
-                    addToast('No se pudo eliminar el producto', 'error')
-                    return
-                }
-                setProductos(prev => prev.filter(producto => producto.asin !== id))
-                setTotal(prev => Math.max(0, prev - 1))
-                setImagenes(prev => {
-                    const restantes = { ...prev }
-                    delete restantes[id]
-                    return restantes
-                })
-                addToast('Producto eliminado exitosamente', 'success')
-            }catch(err){
-                addToast('Ocurrió un error al eliminar el producto', 'error')
-            }
-        }
+        setId(id);
+        showModal('Eliminar','¿Está seguro de eliminar el producto?', 'delete'); //La respuesta se maneja en el useEffect que monitorea responseModal
     }
 
 

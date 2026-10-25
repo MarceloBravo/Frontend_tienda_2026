@@ -6,6 +6,7 @@ import { ToastContainer } from './components/toast/ToastContainer/ToastContainer
 import { FooterComponent } from './components/footer/FooterComponent';
 import { ShoppingCartComponent } from './components/shoppingCart/ShoppingCartComponent';
 import { useAuthStore } from './store/authStore';
+import { ModalComponent } from './components/modal/ModalComponent';
 
 import './App.css';
 
@@ -22,6 +23,7 @@ function App() {
     <BrowserRouter>
       <AuthBootstrap />
       <ToastContainer />
+      <ModalComponent />
       <div className="App">
         <ShoppingCartComponent/>
         <MenuComponent />

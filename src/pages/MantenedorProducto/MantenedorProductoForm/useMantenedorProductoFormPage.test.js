@@ -6,8 +6,11 @@ const mockNavigate = jest.fn();
 const mockSendRequest = jest.fn();
 const mockCargarImagen = jest.fn();
 const mockAddToast = jest.fn();
+const mockShowModal = jest.fn();
+const mockSetResponse = jest.fn();
 let mockParams = {};
 const httpState = { error: null };
+const modalState = { responseModal: null };
 
 jest.mock('react-router', () => ({
     useNavigate: () => mockNavigate,
@@ -27,6 +30,21 @@ jest.mock('browser-image-compression', () => jest.fn());
 jest.mock('../../../store/toastStore', () => ({
     useToastStore: (selector) => selector({ addToast: mockAddToast }),
 }));
+
+jest.mock('../../../store/modalStore', () => ({
+    useModalStore: (selector) => selector({
+        showModal: mockShowModal,
+        responseModal: modalState.responseModal,
+        setResponse: mockSetResponse,
+    }),
+}));
+
+const respondModal = (rerender, response = true) => {
+    act(() => {
+        modalState.responseModal = response;
+        rerender();
+    });
+};
 
 const setTextFields = (result, fields) => {
     Object.entries(fields).forEach(([name, value]) => {
@@ -66,8 +84,10 @@ describe('useMantenedorProductoFormPage', () => {
         mockSendRequest.mockReset();
         mockCargarImagen.mockReset().mockResolvedValue('foto-cargada');
         mockAddToast.mockReset();
+        mockShowModal.mockReset();
+        mockSetResponse.mockReset();
+        modalState.responseModal = null;
         imageCompression.mockReset();
-        jest.spyOn(window, 'confirm').mockReturnValue(true);
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -181,7 +201,7 @@ describe('useMantenedorProductoFormPage', () => {
         const file = new File(['data'], 'foto.png', { type: 'image/png' });
         imageCompression.mockResolvedValue(file);
         mockSendRequest.mockResolvedValueOnce({ status: 'success' });
-        const { result } = renderHook(() => useMantenedorProductoFormPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoFormPage());
 
         setTextFields(result, validTextFields);
         setNumberFields(result, validNumberFields);
@@ -192,11 +212,16 @@ describe('useMantenedorProductoFormPage', () => {
             expect(result.current.formData.product_photo_file).toBe(file);
         });
 
-        await act(async () => {
-            await result.current.handleGrabarClick();
+        act(() => {
+            result.current.handleGrabarClick();
         });
+        expect(mockShowModal).toHaveBeenCalledWith('Grabar', '¿Está seguro de guardar los datos?', 'confirm');
 
-        expect(mockSendRequest).toHaveBeenCalledWith('/api/productos', 'POST', expect.any(FormData), expect.any(Object));
+        respondModal(rerender, true);
+
+        await waitFor(() => {
+            expect(mockSendRequest).toHaveBeenCalledWith('/api/productos', 'POST', expect.any(FormData), expect.any(Object));
+        });
         expect(mockAddToast).toHaveBeenCalledWith('Producto guardado correctamente', 'success');
         expect(mockNavigate).toHaveBeenCalledWith('/admin-producto');
     });
@@ -204,8 +229,7 @@ describe('useMantenedorProductoFormPage', () => {
     it('does not save when the user cancels the confirmation (edge case)', async () => {
         const file = new File(['data'], 'foto.png', { type: 'image/png' });
         imageCompression.mockResolvedValue(file);
-        window.confirm.mockReturnValue(false);
-        const { result } = renderHook(() => useMantenedorProductoFormPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoFormPage());
 
         setTextFields(result, validTextFields);
         setNumberFields(result, validNumberFields);
@@ -214,9 +238,10 @@ describe('useMantenedorProductoFormPage', () => {
         });
         await waitFor(() => expect(result.current.formData.product_photo_file).toBe(file));
 
-        await act(async () => {
-            await result.current.handleGrabarClick();
+        act(() => {
+            result.current.handleGrabarClick();
         });
+        respondModal(rerender, false);
 
         expect(mockSendRequest).not.toHaveBeenCalled();
     });
@@ -240,15 +265,20 @@ describe('useMantenedorProductoFormPage', () => {
                 is_best_seller: false,
             },
         });
-        const { result } = renderHook(() => useMantenedorProductoFormPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoFormPage());
         await waitFor(() => expect(result.current.formData.asin).toBe('ABC12'));
 
         mockSendRequest.mockResolvedValueOnce({ status: 'success' });
-        await act(async () => {
-            await result.current.handleGrabarClick();
+        act(() => {
+            result.current.handleGrabarClick();
         });
+        expect(mockShowModal).toHaveBeenCalledWith('Grabar', '¿Está seguro de guardar los datos?', 'confirm');
 
-        expect(mockSendRequest).toHaveBeenLastCalledWith('/api/productos/ABC12', 'PUT', expect.any(FormData), expect.any(Object));
+        respondModal(rerender, true);
+
+        await waitFor(() => {
+            expect(mockSendRequest).toHaveBeenLastCalledWith('/api/productos/ABC12', 'PUT', expect.any(FormData), expect.any(Object));
+        });
         expect(mockAddToast).toHaveBeenCalledWith('Producto actualizado correctamente', 'success');
         expect(mockNavigate).toHaveBeenCalledWith('/admin-producto');
     });
@@ -257,7 +287,7 @@ describe('useMantenedorProductoFormPage', () => {
         const file = new File(['data'], 'foto.png', { type: 'image/png' });
         imageCompression.mockResolvedValue(file);
         mockSendRequest.mockRejectedValueOnce(new Error('Network Error'));
-        const { result } = renderHook(() => useMantenedorProductoFormPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoFormPage());
 
         setTextFields(result, validTextFields);
         setNumberFields(result, validNumberFields);
@@ -266,11 +296,14 @@ describe('useMantenedorProductoFormPage', () => {
         });
         await waitFor(() => expect(result.current.formData.product_photo_file).toBe(file));
 
-        await act(async () => {
-            await result.current.handleGrabarClick();
+        act(() => {
+            result.current.handleGrabarClick();
         });
+        respondModal(rerender, true);
 
-        expect(mockAddToast).toHaveBeenCalledWith('Ocurrió un error al guardar el producto', 'error');
+        await waitFor(() => {
+            expect(mockAddToast).toHaveBeenCalledWith('Ocurrió un error al guardar el producto', 'error');
+        });
     });
 
     it('rejects a non-png image (negative case)', async () => {
@@ -318,26 +351,31 @@ describe('useMantenedorProductoFormPage', () => {
                 is_best_seller: false,
             },
         });
-        const { result } = renderHook(() => useMantenedorProductoFormPage());
+        const { result, rerender } = renderHook(() => useMantenedorProductoFormPage());
         await waitFor(() => expect(result.current.formData.asin).toBe('ABC12'));
 
         mockSendRequest.mockResolvedValueOnce({ status: 'success' });
-        await act(async () => {
-            await result.current.handlerEliminarClick();
+        act(() => {
+            result.current.handlerEliminarClick();
         });
+        expect(mockShowModal).toHaveBeenCalledWith('Eliminar', '¿Está seguro de eliminar el producto?', 'delete');
 
-        expect(mockSendRequest).toHaveBeenLastCalledWith('/api/productos/ABC12', 'DELETE');
+        respondModal(rerender, true);
+
+        await waitFor(() => {
+            expect(mockSendRequest).toHaveBeenLastCalledWith('/api/productos/ABC12', 'DELETE');
+        });
         expect(mockAddToast).toHaveBeenCalledWith('Producto eliminado correctamente', 'success');
         expect(mockNavigate).toHaveBeenCalledWith('/admin-producto');
     });
 
-    it('does not delete when the user cancels the confirmation (edge case)', async () => {
-        window.confirm.mockReturnValue(false);
-        const { result } = renderHook(() => useMantenedorProductoFormPage());
+    it('does not delete when the user cancels the confirmation (edge case)', () => {
+        const { result, rerender } = renderHook(() => useMantenedorProductoFormPage());
 
-        await act(async () => {
-            await result.current.handlerEliminarClick();
+        act(() => {
+            result.current.handlerEliminarClick();
         });
+        respondModal(rerender, false);
 
         expect(mockSendRequest).not.toHaveBeenCalled();
     });

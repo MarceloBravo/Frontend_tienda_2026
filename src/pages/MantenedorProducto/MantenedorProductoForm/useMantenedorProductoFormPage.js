@@ -7,6 +7,7 @@ import { getMantenedorProductoFormSchema } from './MantenedorProductoFormSchema'
 import imgDefault from '../../../assets/imagen_foto.png'
 import imageCompression from 'browser-image-compression'
 import { useToastStore } from '../../../store/toastStore'
+import { useModalStore } from '../../../store/modalStore'
 
 export const useMantenedorProductoFormPage = () => {    
     const { error, sendRequest }= useHttp()
@@ -26,6 +27,10 @@ export const useMantenedorProductoFormPage = () => {
         product_title: '',
         sales_volume: ''
     })
+    const showModal = useModalStore(store => store.showModal)
+    const responseModal = useModalStore(store => store.responseModal)
+    const setResponse = useModalStore(store => store.setResponse)
+    const [ modalAction, setModalAction ] = useState(null);
     const [ validationErrors, setValidationErrors ] = useState({})
     const [ uploadProgress, setUploadProgress ] = useState(0)
     const [ isLoadingProduct, setIsLoadingProduct ] = useState(false)
@@ -96,6 +101,26 @@ export const useMantenedorProductoFormPage = () => {
         // eslint-disable-next-line
     },[error])
 
+    useEffect(()=>{
+        if(responseModal !== true) return;
+
+        if(modalAction === "save"){
+            setResponse(null);
+            if(id){
+                handleActualizar()
+            }else{
+                handleGrabarNuevo()
+            }
+            return;
+        }
+
+        if(modalAction === "delete"){
+            setResponse(null);
+            handleEliminarProducto()
+        }
+        // eslint-disable-next-line
+    },[responseModal]);
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -136,15 +161,8 @@ export const useMantenedorProductoFormPage = () => {
             addToast('Los datos ingresados no son válidos o están incompletos', 'error');
             return;
         }
-
-        if(!window.confirm('¿Está seguro de guardar los datos?')){
-            return;
-        }
-        if(id){
-            await handleActualizar()
-        }else{
-            await handleGrabarNuevo()
-        }
+        setModalAction("save");
+        showModal('Grabar','¿Está seguro de guardar los datos?', 'confirm'); //La respuesta se maneja en el useEffect que monitorea responseModal
     }
 
     const handleGrabarNuevo = async () => {
@@ -213,11 +231,7 @@ export const useMantenedorProductoFormPage = () => {
         }
     }
     
-    const handlerEliminarClick = async () => {
-        if(!window.confirm('¿Está seguro de eliminar el producto?')){
-            return
-        }
-
+    const handleEliminarProducto = async () => {
         try{
             await sendRequest('/api/productos/' + id, 'DELETE')
             addToast('Producto eliminado correctamente', 'success')
@@ -225,6 +239,11 @@ export const useMantenedorProductoFormPage = () => {
         }catch(error){
             addToast('Ocurrió un error al eliminar el producto', 'error')
         }
+    }
+
+    const handlerEliminarClick = async () => {
+        setModalAction("delete");
+        showModal('Eliminar','¿Está seguro de eliminar el producto?', 'delete'); //La respuesta se maneja en el useEffect que monitorea responseModal
     }
 
     const handleCargarImagenClick = () => {
