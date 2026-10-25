@@ -29,6 +29,10 @@ const Navigation = () => {
                 <Route path="/login" element={<LoginPage/>} />
                 <Route path="/register" element={<RegisterPage/>} />
                 <Route path="/unauthorized" element={<Page403/>} />
+
+                {/* Ruta pendiente: se mostrará la página de favoritos cuando exista */}
+                <Route path="/favorites" element={<Page404/>} />
+
                 <Route path="*" element={<Page404/>} />
             </Routes>
         </Suspense>

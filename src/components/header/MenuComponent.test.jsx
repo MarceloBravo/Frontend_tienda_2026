@@ -94,6 +94,12 @@ describe('MenuComponent', () => {
         expect(screen.getByText('2')).toBeInTheDocument();
     });
 
+    it('links the favorites indicator to /favorites', () => {
+        renderMenu(loggedIn);
+
+        expect(screen.getByTitle('Favoritos')).toHaveAttribute('href', '/favorites');
+    });
+
     it('searches products when clicking the search button (happy path)', async () => {
         renderMenu(loggedIn);
 

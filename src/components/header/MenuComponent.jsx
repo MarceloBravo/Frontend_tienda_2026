@@ -52,7 +52,7 @@ export const MenuComponent = () => {
               <button type="button" onClick={e => handleBtnBuscarClick(e)}>Buscar</button>
           </div>
           <div className={styles.userActions}>
-            <Link to="/cart">
+            <Link to="/favorites" title="Favoritos">
               <span className={styles.icon}>❤️</span>
               <span className={styles.cartCount}>{favoritos}</span>
             </Link>
