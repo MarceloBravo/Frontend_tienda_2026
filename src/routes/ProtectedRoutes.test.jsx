@@ -1,10 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { ProtectedRoutes } from './ProtectedRoutes';
-import AuthContext from '../contexts/AuthContext';
+import { useAuthStore, createInitialAuthState } from '../store/authStore';
 
-const renderGuarded = (authValue, requiredRole = 'admin') => render(
-    <AuthContext.Provider value={authValue}>
+const renderGuarded = (authValue = {}, requiredRole = 'admin') => {
+    const initial = createInitialAuthState();
+    useAuthStore.setState({
+        ...initial,
+        ...authValue,
+    });
+    return render(
         <MemoryRouter initialEntries={['/privado']}>
             <Routes>
                 <Route
@@ -19,12 +24,16 @@ const renderGuarded = (authValue, requiredRole = 'admin') => render(
                 <Route path="/unauthorized" element={<div>Acceso denegado</div>} />
             </Routes>
         </MemoryRouter>
-    </AuthContext.Provider>
-);
+    );
+};
 
-const adminSession = { isLoading: false, error: null, userSession: { user: { rol: 'admin' } } };
+const adminSession = { isLoading: false, error: null, userSession: { isLoggedIn: true, user: { rol: 'admin' }, accessToken: 'token' } };
 
 describe('ProtectedRoutes', () => {
+    beforeEach(() => {
+        useAuthStore.setState(createInitialAuthState());
+    });
+
     it('renders the children for an authorized admin (happy path)', () => {
         renderGuarded(adminSession);
 
@@ -39,7 +48,7 @@ describe('ProtectedRoutes', () => {
     });
 
     it('redirects to login when there is no user (edge case)', () => {
-        renderGuarded({ isLoading: false, error: null, userSession: { user: null } });
+        renderGuarded({ isLoading: false, error: null, userSession: { isLoggedIn: false, user: null, accessToken: null } });
 
         expect(screen.getByText('Pantalla login')).toBeInTheDocument();
     });
@@ -57,14 +66,14 @@ describe('ProtectedRoutes', () => {
     });
 
     it('redirects to unauthorized when the role does not match (negative case)', () => {
-        renderGuarded({ isLoading: false, error: null, userSession: { user: { rol: 'user' } } });
+        renderGuarded({ isLoading: false, error: null, userSession: { isLoggedIn: true, user: { rol: 'user' }, accessToken: 'token' } });
 
         expect(screen.getByText('Acceso denegado')).toBeInTheDocument();
     });
 
     it('renders the children when no role is required (edge case)', () => {
         renderGuarded(
-            { isLoading: false, error: null, userSession: { user: { rol: 'user' } } },
+            { isLoading: false, error: null, userSession: { isLoggedIn: true, user: { rol: 'user' }, accessToken: 'token' } },
             null
         );
 
@@ -72,7 +81,7 @@ describe('ProtectedRoutes', () => {
     });
 
     it('redirects to unauthorized when the user has no role but one is required (edge case)', () => {
-        renderGuarded({ isLoading: false, error: null, userSession: { user: {} } });
+        renderGuarded({ isLoading: false, error: null, userSession: { isLoggedIn: true, user: {}, accessToken: 'token' } });
 
         expect(screen.getByText('Acceso denegado')).toBeInTheDocument();
     });

@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
-import { AppProviders } from './contexts/AppProviders';
 import instance from './axios/axiosInstance';
 import { useProductStore, createInitialProductState } from './store/productStore';
+import { useAuthStore, createInitialAuthState } from './store/authStore';
 
 jest.mock('./axios/axiosInstance', () => ({
     __esModule: true,
@@ -16,16 +16,13 @@ const emptyResponse = {
     data: { status: 'success', data: [], totProd: 0, totPages: 0, page: 1 },
 };
 
-const renderApp = () => render(
-    <AppProviders>
-        <App />
-    </AppProviders>
-);
+const renderApp = () => render(<App />);
 
 describe('App', () => {
     beforeEach(() => {
         localStorage.clear();
         useProductStore.setState(createInitialProductState());
+        useAuthStore.setState(createInitialAuthState());
         instance.mockReset();
         instance.mockImplementation(() => Promise.resolve(emptyResponse));
         jest.spyOn(console, 'error').mockImplementation(() => {});

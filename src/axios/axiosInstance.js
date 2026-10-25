@@ -7,17 +7,17 @@ const instance = axios.create({
   baseURL: API_URL,
 });
 
-// Variable para almacenar la función de actualización del store/context
+// Variable para almacenar el store
 let store;
 
 export const injectStore = (_store) => {
   store = _store;
 };
 
-
 instance.interceptors.request.use(
   (config) => {
-    const token = store.userSession.accessToken;
+    const currentStore = store?.getState ? store.getState() : store;
+    const token = currentStore?.userSession?.accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,7 +37,6 @@ instance.interceptors.response.use(
     const requestUrl = originalRequest?.url;
 
     // Un 401 del login son credenciales inválidas: no hay nada que refrescar.
-    // Dejar propagar el error permite mostrar el mensaje del backend sin recargar.
     if (requestUrl === '/api/login') {
       return Promise.reject(error);
     }
@@ -66,20 +65,29 @@ instance.interceptors.response.use(
         }
 
         saveRefreshToken(newRefreshToken);
-        if (store && store.setUserSession) {
-          store.setUserSession(prev => ({
-            ...prev,
-            accessToken: newAccessToken,
-          }));
+        const currentStore = store?.getState ? store.getState() : store;
+        if (currentStore) {
+          if (typeof currentStore.setAccessToken === 'function') {
+            currentStore.setAccessToken(newAccessToken);
+          } else if (typeof currentStore.setUserSession === 'function') {
+            currentStore.setUserSession((prev) => ({
+              ...(prev || currentStore.userSession || {}),
+              accessToken: newAccessToken,
+            }));
+          }
         }
 
         // Reintentar la request original con el nuevo token
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return instance(originalRequest);
       } catch (err) {
-        await store.logout();
+        const currentStore = store?.getState ? store.getState() : store;
+        if (currentStore && typeof currentStore.logout === 'function') {
+          await currentStore.logout();
+        }
         // Si falla el refresh → redirigir a login
         window.location.href = "/login";
+        return Promise.reject(err);
       }
     }
     return Promise.reject(error);

@@ -1,16 +1,16 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useProductStore } from '../../store/productStore';
 import { useLocation } from 'react-router';
-import AuthContext from '../../contexts/AuthContext';
+import { useAuthStore } from '../../store/authStore';
 import { useShoppingCartStore } from '../../store/shoppingCartStore';
 
 export const useMenuComponent = () => {
-  const { logout } = useContext(AuthContext);
+  const logout = useAuthStore((state) => state.logout);
+  const userSession = useAuthStore((state) => state.userSession);
   const favoritos = useProductStore((state) => state.favoritos);
   const loading = useProductStore((state) => state.loading);
   const getAllProducts = useProductStore((state) => state.getAllProducts);
   const setContadorFavoritos = useProductStore((state) => state.setContadorFavoritos);
-  const { userSession } = useContext(AuthContext)
   const [ searchText, setSearchText ] = useState(localStorage.getItem('filter') || '');
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();

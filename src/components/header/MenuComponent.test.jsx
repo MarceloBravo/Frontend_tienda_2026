@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MenuComponent } from './MenuComponent';
-import AuthContext from '../../contexts/AuthContext';
 import { useProductStore, createInitialProductState } from '../../store/productStore';
+import { useAuthStore, createInitialAuthState } from '../../store/authStore';
 
 const mockLogout = jest.fn();
 const mockGetAllProducts = jest.fn();
@@ -17,17 +17,23 @@ const resetProductStore = () => {
 const loggedOut = { isLoggedIn: false, user: null, accessToken: null };
 const loggedIn = { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' };
 
-const renderMenu = (userSession, initialEntries = ['/']) => render(
-    <AuthContext.Provider value={{ logout: mockLogout, userSession }}>
+const renderMenu = (userSession, initialEntries = ['/']) => {
+    useAuthStore.setState({
+        ...createInitialAuthState(),
+        logout: mockLogout,
+        userSession: userSession || { isLoggedIn: false, user: null, accessToken: null },
+    });
+    return render(
         <MemoryRouter initialEntries={initialEntries}>
             <MenuComponent />
         </MemoryRouter>
-    </AuthContext.Provider>
-);
+    );
+};
 
 describe('MenuComponent', () => {
     beforeEach(() => {
         localStorage.clear();
+        useAuthStore.setState(createInitialAuthState());
         mockLogout.mockReset().mockResolvedValue();
         mockGetAllProducts.mockReset().mockResolvedValue([]);
         resetProductStore();

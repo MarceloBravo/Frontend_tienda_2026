@@ -1,12 +1,13 @@
 import { Navigate, useLocation } from "react-router";
-import { useContext } from "react";
-import AuthContext from "../contexts/AuthContext";
+import { useAuthStore } from "../store/authStore";
 
 export const ProtectedRoutes = ({ children, requiredRole }) => {
-    const { isLoading, error, userSession } = useContext(AuthContext);
+    const isLoading = useAuthStore((state) => state.isLoading);
+    const error = useAuthStore((state) => state.error);
+    const userSession = useAuthStore((state) => state.userSession);
     const location = useLocation();
 
-    if(isLoading){
+    if (isLoading) {
         return <div>Cargando...</div>
     }
 

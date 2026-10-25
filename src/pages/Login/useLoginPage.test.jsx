@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useLoginPage } from './useLoginPage';
-import AuthContext from '../../contexts/AuthContext';
+import { useAuthStore, createInitialAuthState } from '../../store/authStore';
 
 const mockNavigate = jest.fn();
 const mockAddToast = jest.fn();
@@ -14,12 +14,6 @@ jest.mock('../../store/toastStore', () => ({
     useToastStore: (selector) => selector({ addToast: mockAddToast }),
 }));
 
-const createWrapper = (authValue) => ({ children }) => (
-    <AuthContext.Provider value={authValue}>
-        {children}
-    </AuthContext.Provider>
-);
-
 const defaultAuth = {
     login: mockLogin,
     isLoading: false,
@@ -29,20 +23,28 @@ const defaultAuth = {
 
 describe('useLoginPage', () => {
     beforeEach(() => {
+        useAuthStore.setState(createInitialAuthState());
         mockNavigate.mockReset();
         mockAddToast.mockReset();
         mockLogin.mockReset().mockResolvedValue();
+        useAuthStore.setState({
+            ...createInitialAuthState(),
+            login: mockLogin,
+            isLoading: false,
+            error: null,
+            userSession: { isLoggedIn: false, user: null, accessToken: null },
+        });
     });
 
     it('starts with an empty form and no errors', () => {
-        const { result } = renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        const { result } = renderHook(() => useLoginPage());
 
         expect(result.current.formLogin).toEqual({ email: '', password: '', rememberMe: false });
         expect(result.current.errorsLogin).toEqual({ email: '', password: '' });
     });
 
     it('sets a required error when an input is emptied (edge case)', () => {
-        const { result } = renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        const { result } = renderHook(() => useLoginPage());
 
         act(() => {
             result.current.handleInputChange({ target: { name: 'email', value: '' } });
@@ -52,7 +54,7 @@ describe('useLoginPage', () => {
     });
 
     it('clears the error when a valid value is typed (happy path)', () => {
-        const { result } = renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        const { result } = renderHook(() => useLoginPage());
 
         act(() => {
             result.current.handleInputChange({ target: { name: 'email', value: '' } });
@@ -66,7 +68,7 @@ describe('useLoginPage', () => {
     });
 
     it('toggles the remember me option', () => {
-        const { result } = renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        const { result } = renderHook(() => useLoginPage());
 
         act(() => {
             result.current.handleRememberMeClick();
@@ -76,7 +78,7 @@ describe('useLoginPage', () => {
     });
 
     it('calls login with the form data on submit', async () => {
-        const { result } = renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        const { result } = renderHook(() => useLoginPage());
 
         act(() => {
             result.current.handleInputChange({ target: { name: 'email', value: 'user@test.com' } });
@@ -98,7 +100,8 @@ describe('useLoginPage', () => {
 
     it('shows an error toast when login fails (API failure)', async () => {
         mockLogin.mockRejectedValueOnce(new Error('Usuario y o contraseña no válidos.'));
-        const { result } = renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        useAuthStore.setState({ ...useAuthStore.getState(), login: mockLogin });
+        const { result } = renderHook(() => useLoginPage());
 
         await act(async () => {
             await result.current.handleSubmit({ preventDefault: jest.fn() });
@@ -108,18 +111,17 @@ describe('useLoginPage', () => {
     });
 
     it('redirects to home when the session is already logged in', () => {
-        renderHook(() => useLoginPage(), {
-            wrapper: createWrapper({
-                ...defaultAuth,
-                userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' },
-            }),
+        useAuthStore.setState({
+            ...useAuthStore.getState(),
+            userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' },
         });
+        renderHook(() => useLoginPage());
 
         expect(mockNavigate).toHaveBeenCalledWith('/');
     });
 
     it('does not redirect when there is no session', () => {
-        renderHook(() => useLoginPage(), { wrapper: createWrapper(defaultAuth) });
+        renderHook(() => useLoginPage());
 
         expect(mockNavigate).not.toHaveBeenCalled();
     });

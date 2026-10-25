@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useMenuComponent } from './useMenuComponent';
-import AuthContext from '../../contexts/AuthContext';
 import { useProductStore, createInitialProductState } from '../../store/productStore';
+import { useAuthStore, createInitialAuthState } from '../../store/authStore';
 
 const mockLogout = jest.fn();
 const mockGetAllProducts = jest.fn();
@@ -17,19 +17,19 @@ const resetProductStore = () => {
     });
 };
 
-const createWrapper = (userSession) => ({ children }) => (
-    <AuthContext.Provider value={{ logout: mockLogout, userSession }}>
-        {children}
-    </AuthContext.Provider>
-);
-
 describe('useMenuComponent', () => {
     beforeEach(() => {
         localStorage.clear();
+        useAuthStore.setState(createInitialAuthState());
         mockLogout.mockReset();
         mockGetAllProducts.mockReset().mockResolvedValue([]);
         resetProductStore();
         jest.spyOn(console, 'error').mockImplementation(() => {});
+        useAuthStore.setState({
+            ...createInitialAuthState(),
+            logout: mockLogout,
+            userSession: { isLoggedIn: false, user: null, accessToken: null },
+        });
     });
 
     afterEach(() => {
@@ -38,9 +38,8 @@ describe('useMenuComponent', () => {
 
     it('starts with the filter from localStorage', () => {
         localStorage.setItem('filter', 'telefono');
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         expect(result.current.searchText).toBe('telefono');
     });
@@ -48,18 +47,16 @@ describe('useMenuComponent', () => {
     it('gets the favorites count on mount (happy path)', () => {
         localStorage.setItem('favoritos', JSON.stringify([{ asin: 'A1' }, { asin: 'A2' }]));
         resetProductStore();
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
 
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        const { result } = renderHook(() => useMenuComponent());
 
         expect(result.current.favoritos).toBe(2);
     });
 
     it('searches products with the typed text', async () => {
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         act(() => {
             result.current.handleSearchChange({ target: { value: 'telefono' } });
@@ -73,9 +70,8 @@ describe('useMenuComponent', () => {
     });
 
     it('still searches with an empty string (edge case)', async () => {
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         await act(async () => {
             await result.current.handleBtnBuscarClick();
@@ -86,9 +82,8 @@ describe('useMenuComponent', () => {
 
     it('logs the error without throwing when the search fails (API failure)', async () => {
         mockGetAllProducts.mockRejectedValueOnce(new Error('Network Error'));
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         await act(async () => {
             await result.current.handleBtnBuscarClick();
@@ -98,9 +93,8 @@ describe('useMenuComponent', () => {
     });
 
     it('calls logout when ending the session', async () => {
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), logout: mockLogout, userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         await act(async () => {
             await result.current.endSession();
@@ -111,9 +105,8 @@ describe('useMenuComponent', () => {
 
     it('logs the error without throwing when logout fails (negative case)', async () => {
         mockLogout.mockRejectedValueOnce(new Error('logout failed'));
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), logout: mockLogout, userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         await act(async () => {
             await result.current.endSession();
@@ -125,18 +118,16 @@ describe('useMenuComponent', () => {
     it('handles a corrupted favorites entry in localStorage (edge case)', () => {
         localStorage.setItem('favoritos', 'no-es-json');
         resetProductStore();
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: false, user: null, accessToken: null } });
 
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: false, user: null }),
-        });
+        const { result } = renderHook(() => useMenuComponent());
 
         expect(result.current.favoritos).toBe(0);
     });
 
     it('updates the favorites count on a storage event', () => {
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         localStorage.setItem('favoritos', JSON.stringify([{ asin: 'A1' }, { asin: 'A2' }]));
         act(() => {
@@ -148,9 +139,8 @@ describe('useMenuComponent', () => {
 
     it('detects the scroll state', () => {
         Object.defineProperty(window, 'scrollY', { value: 150, writable: true });
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper({ isLoggedIn: true, user: { username: 'ana' } }),
-        });
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
+        const { result } = renderHook(() => useMenuComponent());
 
         act(() => {
             window.dispatchEvent(new Event('scroll'));
@@ -160,10 +150,9 @@ describe('useMenuComponent', () => {
     });
 
     it('returns the user session from the auth context', () => {
-        const session = { isLoggedIn: true, user: { username: 'ana' } };
-        const { result } = renderHook(() => useMenuComponent(), {
-            wrapper: createWrapper(session),
-        });
+        const session = { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' };
+        useAuthStore.setState({ ...useAuthStore.getState(), userSession: session });
+        const { result } = renderHook(() => useMenuComponent());
 
         expect(result.current.userSession).toBe(session);
     });
