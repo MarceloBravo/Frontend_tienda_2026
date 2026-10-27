@@ -57,7 +57,7 @@ export const useProductCard = ({...data}) => {
 
         const favoritos = localStorage.getItem('favoritos');
         if (!favoritos) {
-            const item = {asin, product_title, product_star_rating, product_num_ratings, product_price}
+            const item = {asin, product_title, product_star_rating, product_num_ratings, product_price, product_photo}
             localStorage.setItem('favoritos', JSON.stringify([item]));
             setContadorFavoritos(1);
         } else {
@@ -75,7 +75,7 @@ export const useProductCard = ({...data}) => {
             favoritosArray = [];
         }
         if (isFavorite) {   //Agregar
-            const item = {asin, product_title, product_star_rating, product_num_ratings, product_price}
+            const item = {asin, product_title, product_star_rating, product_num_ratings, product_price, product_photo}
             favoritosArray.push(item);
         } else {    //Eliminar
             const index = favoritosArray.findIndex(p => p.asin === asin);

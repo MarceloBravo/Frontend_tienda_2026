@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Route, Routes } from 'react-router';
 import { SpinnerComponent } from '../components/spinner/SpinnerComponent';
 import { ProtectedRoutes } from './ProtectedRoutes';
+import { FavoritePage } from '../pages/favorites/FavoritesPage';
 
 const HomePage = lazy(() => import('../pages/home/HomePage').then(module => ({ default: module.HomePage })));
 const DetalleProductoPage = lazy(() => import('../pages/DetalleProducto/DetalleProductoPage').then(module => ({ default: module.DetalleProductoPage })));
@@ -31,7 +32,7 @@ const Navigation = () => {
                 <Route path="/unauthorized" element={<Page403/>} />
 
                 {/* Ruta pendiente: se mostrará la página de favoritos cuando exista */}
-                <Route path="/favorites" element={<Page404/>} />
+                <Route path="/favorites" element={<FavoritePage/>} />
 
                 <Route path="*" element={<Page404/>} />
             </Routes>

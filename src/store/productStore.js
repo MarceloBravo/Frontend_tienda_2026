@@ -118,6 +118,14 @@ export const useProductStore = create((set, get) => ({
     getProduct: async (productId, { forceRefresh = false, silent = false } = {}) => {
         get().clearExpiredCache();
 
+        if (!productId) {
+            const invalidIdError = new Error('ID de producto inválido');
+            if (!silent) {
+                set({ loading: false, error: invalidIdError.message });
+            }
+            throw invalidIdError;
+        }
+
         const cached = get().productDetailCache[productId];
         if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_TTL) {
             return cached.data;
@@ -156,7 +164,9 @@ export const useProductStore = create((set, get) => ({
 
             return product;
         } catch (error) {
-            set({ loading: false, error: error.message });
+            if (!silent) {
+                set({ loading: false, error: error.message });
+            }
             throw error;
         }
     },
@@ -173,6 +183,7 @@ export const useProductStore = create((set, get) => ({
             set({
                 ...buildProductsState(cached.data, currentPage),
                 loading: false,
+                error: null,
             });
             return cached.data;
         }

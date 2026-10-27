@@ -121,6 +121,17 @@ describe('productStore', () => {
         expect(useProductStore.getState().products).toEqual([{ asin: 'A1' }]);
     });
 
+    it('clears a previous error when serving cached products (edge case)', async () => {
+        instance.mockResolvedValueOnce({ data: productsResponse([{ asin: 'A1' }], 1, 1, 1) });
+        await useProductStore.getState().getAllProducts();
+
+        useProductStore.setState({ error: 'Request failed with status code 404' });
+        await useProductStore.getState().getAllProducts();
+
+        expect(instance).toHaveBeenCalledTimes(1);
+        expect(useProductStore.getState().error).toBeNull();
+    });
+
     it('does not reuse the cache for a different page (happy path)', async () => {
         instance.mockResolvedValueOnce({ data: productsResponse([{ asin: 'A1' }], 1, 3, 1) });
         await useProductStore.getState().getAllProducts('', 1);
@@ -218,6 +229,25 @@ describe('productStore', () => {
         await expect(useProductStore.getState().getProduct('A1')).rejects.toThrow('Network Error');
 
         expect(useProductStore.getState().error).toBe('Network Error');
+        expect(useProductStore.getState().loading).toBe(false);
+    });
+
+    it('rejects an invalid product id without calling the API (negative case)', async () => {
+        await expect(useProductStore.getState().getProduct()).rejects.toThrow('ID de producto inválido');
+
+        expect(instance).not.toHaveBeenCalled();
+        expect(useProductStore.getState().error).toBe('ID de producto inválido');
+        expect(useProductStore.getState().loading).toBe(false);
+    });
+
+    it('does not store a global error when a silent detail request fails (edge case)', async () => {
+        instance.mockRejectedValueOnce(new Error('Network Error'));
+
+        await expect(
+            useProductStore.getState().getProduct('A1', { forceRefresh: true, silent: true })
+        ).rejects.toThrow('Network Error');
+
+        expect(useProductStore.getState().error).toBeNull();
         expect(useProductStore.getState().loading).toBe(false);
     });
 

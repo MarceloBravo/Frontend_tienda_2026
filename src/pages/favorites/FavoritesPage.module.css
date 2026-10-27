@@ -1,0 +1,53 @@
+.container{
+    padding: 0em 6em;
+}
+
+.tabla {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+
+.noFavorites{
+    height: 81px;
+}
+
+.tabla table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla th, .tabla td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.tabla th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.tabla .ellipsisn {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; /* número de líneas */
+  line-clamp: 3;
+  overflow: hidden;
+  max-width: 875px; /* opcional */
+}
+
+
+.tabla tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.tabla tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+.tabla tbody button{
+    background: none;
+    border: none;
+    cursor: pointer;
+}
