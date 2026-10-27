@@ -33,7 +33,7 @@ export const FavoritePage = () => {
                             <td>{item.asin}</td>
                             <td>{item.product_title}</td>
                             <td>$ {item.product_price}</td>
-                            <td><img src={item.product_photo} style={{width: '60px', height: 'auto', borderRadius: '4px'}} ></img></td>
+                            <td><img src={item.product_photo} alt={item.product_title || 'Producto'} style={{width: '60px', height: 'auto', borderRadius: '4px'}} /></td>
                             <td><button type="button" onClick={() => addItemToCart(item.asin)}>🛒</button></td>
                             <td><button type="button" onClick={() => removeFromFavorites(item.asin)}>✖️</button></td>
                         </tr>
