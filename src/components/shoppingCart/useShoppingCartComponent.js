@@ -29,6 +29,9 @@ export const useShoppingCartComponent = () => {
     }
 
     const CheckoutHandleClic = () => {
+        if (!Array.isArray(products) || products.length === 0) {
+            return;
+        }
         closeCart();
         navigate("/checkout");
     }
