@@ -1,6 +1,10 @@
 
 export const cargarImagen = async (url) => {
-    const urlAlternativa = process.env.REACT_APP_API_URL + '\\' + url;
+    if (!url) return null;
+    const apiUrl = process.env.REACT_APP_API_URL || '';
+    const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+    const cleanUrl = typeof url === 'string' && url.startsWith('/') ? url.slice(1) : url;
+    const urlAlternativa = baseUrl ? `${baseUrl}/${cleanUrl}` : url;
     const resultado = await obtenerImagenValida(url, urlAlternativa);
     return resultado;
 }
