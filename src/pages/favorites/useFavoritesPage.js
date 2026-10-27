@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useProductStore } from "../../store/productStore";
 import { useToastStore } from "../../store/toastStore";
 import { useShoppingCartStore } from "../../store/shoppingCartStore";
+import { cargarImagen } from '../../utils/images';
 
 export const useFavoritesPage = () => {
     const getProduct = useProductStore((state) => state.getProduct);
@@ -11,11 +12,18 @@ export const useFavoritesPage = () => {
     const setContadorFavoritos = useProductStore((state) => state.setContadorFavoritos);
     
     useEffect(()=> {
-        const checkFavoritos = () => {
+        const checkFavoritos = async () => {
             const fav = localStorage.getItem('favoritos')
             if(fav){
                 try {
-                    setArrFavoritos(JSON.parse(fav))
+                    const parsed = JSON.parse(fav);
+                    const resolved = await Promise.all(
+                        parsed.map(async (item) => ({
+                            ...item,
+                            product_photo: await cargarImagen(item.product_photo)
+                        }))
+                    );
+                    setArrFavoritos(resolved);
                 } catch {
                     setArrFavoritos([])
                 }
@@ -27,6 +35,7 @@ export const useFavoritesPage = () => {
         window.addEventListener('storage', checkFavoritos)
         return () => window.removeEventListener('storage', checkFavoritos)
     },[])
+
 
     const addItemToCart = async (productId, cant = 1) => {
         if (!productId) return;
