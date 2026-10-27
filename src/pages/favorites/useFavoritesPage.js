@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useProductStore } from "../../store/productStore";
 import { useToastStore } from "../../store/toastStore";
 import { useShoppingCartStore } from "../../store/shoppingCartStore";
-import { cargarImagen } from '../../utils/images';
+import { resolverUrlImagen } from '../../utils/images';
 
 export const useFavoritesPage = () => {
     const getProduct = useProductStore((state) => state.getProduct);
@@ -11,18 +11,31 @@ export const useFavoritesPage = () => {
     const addToCart = useShoppingCartStore(store => store.addToCart);
     const setContadorFavoritos = useProductStore((state) => state.setContadorFavoritos);
     
+    const buildFavoritoConImagen = async (item) => {
+        if (!item?.asin) {
+            return { ...item, product_photo: resolverUrlImagen(item?.product_photo) };
+        }
+        try {
+            const freshProduct = await getProduct(item.asin, { silent: true });
+            return {
+                ...item,
+                product_title: freshProduct?.product_title ?? item.product_title,
+                product_price: freshProduct?.product_price ?? item.product_price,
+                product_photo: resolverUrlImagen(freshProduct?.product_photo ?? item.product_photo),
+            };
+        } catch {
+            return { ...item, product_photo: resolverUrlImagen(item.product_photo) };
+        }
+    }
+
     useEffect(()=> {
         const checkFavoritos = async () => {
             const fav = localStorage.getItem('favoritos')
             if(fav){
                 try {
                     const parsed = JSON.parse(fav);
-                    const resolved = await Promise.all(
-                        parsed.map(async (item) => ({
-                            ...item,
-                            product_photo: await cargarImagen(item.product_photo)
-                        }))
-                    );
+                    const favoritos = Array.isArray(parsed) ? parsed : [];
+                    const resolved = await Promise.all(favoritos.map(buildFavoritoConImagen));
                     setArrFavoritos(resolved);
                 } catch {
                     setArrFavoritos([])
@@ -34,6 +47,7 @@ export const useFavoritesPage = () => {
         checkFavoritos()
         window.addEventListener('storage', checkFavoritos)
         return () => window.removeEventListener('storage', checkFavoritos)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     },[])
 
 
@@ -54,8 +68,19 @@ export const useFavoritesPage = () => {
     }
 
     const removeFromFavorites = (productId) => {
-        const updatedFavorites = arrFavoritos.filter(p => p.asin !== productId);
-        setArrFavoritos(updatedFavorites);
+        const fav = localStorage.getItem('favoritos');
+        let storedFavorites = [];
+        try {
+            const parsed = JSON.parse(fav);
+            storedFavorites = Array.isArray(parsed) ? parsed : [];
+        } catch {
+            storedFavorites = [];
+        }
+        const updatedFavorites = storedFavorites.filter(p => p.asin !== productId);
+        setArrFavoritos(updatedFavorites.map((item) => ({
+            ...item,
+            product_photo: resolverUrlImagen(item.product_photo),
+        })));
         setContadorFavoritos(updatedFavorites.length);
         localStorage.setItem('favoritos', JSON.stringify(updatedFavorites));
     }
