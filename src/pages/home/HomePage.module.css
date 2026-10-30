@@ -1,3 +1,8 @@
+.searchBar{
+    display: flex;
+    justify-content: flex-end;
+}
+
 .productsGrid{
     display: flex;
     flex-wrap: wrap;

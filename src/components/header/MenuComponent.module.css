@@ -60,26 +60,6 @@
   padding-bottom: 2px;
 }
 
-.searchBar {
-  display: flex;
-}
-
-.searchBar input {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  border-radius: 4px 0 0 4px;
-  min-width: 300px;
-}
-
-.searchBar button {
-  border: 1px solid #0070f3;
-  background-color: #0070f3;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-}
-
 .userActions {
   display: flex;
   align-items: center;
@@ -118,8 +98,8 @@
 
 .cartItemsCount {
   position: absolute;
-  top: -5px;
-  right: -10px;
+  top: 5px;
+  right: 5px;
   background-color: #000;
   color: #fff;
   border-radius: 50%;
@@ -137,7 +117,7 @@
   padding: 0px 5px;
 }
 
-.userMenu button {
+button {
   background: none;
   border: none;
   padding: 0;
@@ -148,6 +128,6 @@
   transition: color 0.2s ease-in-out;
 }
 
-.userMenu button:hover {
+button:hover {
   color: #0070f3;
 }

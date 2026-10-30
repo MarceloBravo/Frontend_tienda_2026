@@ -9,9 +9,7 @@ export const useMenuComponent = () => {
   const userSession = useAuthStore((state) => state.userSession);
   const favoritos = useProductStore((state) => state.favoritos);
   const loading = useProductStore((state) => state.loading);
-  const getAllProducts = useProductStore((state) => state.getAllProducts);
   const setContadorFavoritos = useProductStore((state) => state.setContadorFavoritos);
-  const [ searchText, setSearchText ] = useState(localStorage.getItem('filter') || '');
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const openCart = useShoppingCartStore(state => state.openCart);  
@@ -46,28 +44,6 @@ export const useMenuComponent = () => {
     return () => window.removeEventListener('storage', checkFavoritos)
   },[setContadorFavoritos])
 
-  
-  
-  const handleSearchChange = (e) => {
-    setSearchText(e.target.value);
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleBtnBuscarClick();
-    }
-  };
-
-  
-  const handleBtnBuscarClick = async () => {
-    try{
-      await getAllProducts(searchText);
-    }catch(error){
-      console.error('Error loading products:', error);
-    }    
-  }
-
-
   const endSession = async () => {
     try{
       await logout()
@@ -78,10 +54,6 @@ export const useMenuComponent = () => {
 
   return {
     isScrolled,
-    searchText,
-    handleSearchChange,
-    handleKeyDown,
-    handleBtnBuscarClick,
     favoritos,
     loading,
     location,
