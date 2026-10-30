@@ -1,17 +1,14 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { MenuComponent } from './MenuComponent';
 import { useProductStore, createInitialProductState } from '../../store/productStore';
 import { useAuthStore, createInitialAuthState } from '../../store/authStore';
+import { useShoppingCartStore } from '../../store/shoppingCartStore';
 
 const mockLogout = jest.fn();
-const mockGetAllProducts = jest.fn();
 
 const resetProductStore = () => {
-    useProductStore.setState({
-        ...createInitialProductState(),
-        getAllProducts: mockGetAllProducts,
-    });
+    useProductStore.setState(createInitialProductState());
 };
 
 const loggedOut = { isLoggedIn: false, user: null, accessToken: null };
@@ -34,8 +31,8 @@ describe('MenuComponent', () => {
     beforeEach(() => {
         localStorage.clear();
         useAuthStore.setState(createInitialAuthState());
+        useShoppingCartStore.setState({ products: [], productsInCart: 0, isOpen: false });
         mockLogout.mockReset().mockResolvedValue();
-        mockGetAllProducts.mockReset().mockResolvedValue([]);
         resetProductStore();
         jest.spyOn(console, 'error').mockImplementation(() => {});
     });
@@ -97,46 +94,15 @@ describe('MenuComponent', () => {
     it('links the favorites indicator to /favorites', () => {
         renderMenu(loggedIn);
 
-        expect(screen.getByTitle('Favoritos')).toHaveAttribute('href', '/favorites');
+        expect(screen.getByRole('link', { name: /❤️/ })).toHaveAttribute('href', '/favorites');
     });
 
-    it('searches products when clicking the search button (happy path)', async () => {
+    it('does not render the product search box in the header (negative case)', () => {
         renderMenu(loggedIn);
 
-        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'telefono' } });
-        await act(async () => {
-            fireEvent.click(screen.getByText('Buscar'));
-        });
-
-        await waitFor(() => {
-            expect(mockGetAllProducts).toHaveBeenCalledWith('telefono');
-        });
-    });
-
-    it('searches products when pressing Enter', async () => {
-        renderMenu(loggedIn);
-
-        const input = screen.getByRole('textbox');
-        fireEvent.change(input, { target: { value: 'tv' } });
-        await act(async () => {
-            fireEvent.keyDown(input, { key: 'Enter' });
-        });
-
-        await waitFor(() => {
-            expect(mockGetAllProducts).toHaveBeenCalledWith('tv');
-        });
-    });
-
-    it('searches with an empty string without crashing (edge case)', async () => {
-        renderMenu(loggedIn);
-
-        await act(async () => {
-            fireEvent.click(screen.getByText('Buscar'));
-        });
-
-        await waitFor(() => {
-            expect(mockGetAllProducts).toHaveBeenCalledWith('');
-        });
+        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText('Buscar producto...')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument();
     });
 
     it('hides the product manager link when there is no session', () => {

@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { ShoppingCartComponent } from './ShoppingCartComponent';
 import { useShoppingCartStore } from '../../store/shoppingCartStore';
 
@@ -12,7 +13,11 @@ const resetStore = () => {
     useShoppingCartStore.setState({ products: [], isOpen: true });
 };
 
-const renderCart = () => render(<ShoppingCartComponent />);
+const renderCart = () => render(
+    <MemoryRouter>
+        <ShoppingCartComponent />
+    </MemoryRouter>
+);
 
 beforeEach(() => {
     resetStore();

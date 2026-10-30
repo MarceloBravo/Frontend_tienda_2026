@@ -2,19 +2,16 @@ import { renderHook, act } from '@testing-library/react';
 import { useMenuComponent } from './useMenuComponent';
 import { useProductStore, createInitialProductState } from '../../store/productStore';
 import { useAuthStore, createInitialAuthState } from '../../store/authStore';
+import { useShoppingCartStore } from '../../store/shoppingCartStore';
 
 const mockLogout = jest.fn();
-const mockGetAllProducts = jest.fn();
 
 jest.mock('react-router', () => ({
     useLocation: () => ({ pathname: '/' }),
 }));
 
 const resetProductStore = () => {
-    useProductStore.setState({
-        ...createInitialProductState(),
-        getAllProducts: mockGetAllProducts,
-    });
+    useProductStore.setState(createInitialProductState());
 };
 
 describe('useMenuComponent', () => {
@@ -22,8 +19,8 @@ describe('useMenuComponent', () => {
         localStorage.clear();
         useAuthStore.setState(createInitialAuthState());
         mockLogout.mockReset();
-        mockGetAllProducts.mockReset().mockResolvedValue([]);
         resetProductStore();
+        useShoppingCartStore.setState({ products: [], productsInCart: 0, isOpen: false });
         jest.spyOn(console, 'error').mockImplementation(() => {});
         useAuthStore.setState({
             ...createInitialAuthState(),
@@ -36,14 +33,6 @@ describe('useMenuComponent', () => {
         jest.restoreAllMocks();
     });
 
-    it('starts with the filter from localStorage', () => {
-        localStorage.setItem('filter', 'telefono');
-        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
-        const { result } = renderHook(() => useMenuComponent());
-
-        expect(result.current.searchText).toBe('telefono');
-    });
-
     it('gets the favorites count on mount (happy path)', () => {
         localStorage.setItem('favoritos', JSON.stringify([{ asin: 'A1' }, { asin: 'A2' }]));
         resetProductStore();
@@ -52,44 +41,6 @@ describe('useMenuComponent', () => {
         const { result } = renderHook(() => useMenuComponent());
 
         expect(result.current.favoritos).toBe(2);
-    });
-
-    it('searches products with the typed text', async () => {
-        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
-        const { result } = renderHook(() => useMenuComponent());
-
-        act(() => {
-            result.current.handleSearchChange({ target: { value: 'telefono' } });
-        });
-        await act(async () => {
-            await result.current.handleBtnBuscarClick();
-        });
-
-        expect(result.current.searchText).toBe('telefono');
-        expect(mockGetAllProducts).toHaveBeenCalledWith('telefono');
-    });
-
-    it('still searches with an empty string (edge case)', async () => {
-        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
-        const { result } = renderHook(() => useMenuComponent());
-
-        await act(async () => {
-            await result.current.handleBtnBuscarClick();
-        });
-
-        expect(mockGetAllProducts).toHaveBeenCalledWith('');
-    });
-
-    it('logs the error without throwing when the search fails (API failure)', async () => {
-        mockGetAllProducts.mockRejectedValueOnce(new Error('Network Error'));
-        useAuthStore.setState({ ...useAuthStore.getState(), userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' } });
-        const { result } = renderHook(() => useMenuComponent());
-
-        await act(async () => {
-            await result.current.handleBtnBuscarClick();
-        });
-
-        expect(console.error).toHaveBeenCalled();
     });
 
     it('calls logout when ending the session', async () => {
@@ -149,11 +100,18 @@ describe('useMenuComponent', () => {
         expect(result.current.isScrolled).toBe(true);
     });
 
-    it('returns the user session from the auth context', () => {
+    it('returns the user session from the auth store', () => {
         const session = { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' };
         useAuthStore.setState({ ...useAuthStore.getState(), userSession: session });
         const { result } = renderHook(() => useMenuComponent());
 
         expect(result.current.userSession).toBe(session);
+    });
+
+    it('exposes the cart actions from the shopping cart store', () => {
+        const { result } = renderHook(() => useMenuComponent());
+
+        expect(typeof result.current.openCart).toBe('function');
+        expect(result.current.countProductsInCart).toBe(0);
     });
 });
