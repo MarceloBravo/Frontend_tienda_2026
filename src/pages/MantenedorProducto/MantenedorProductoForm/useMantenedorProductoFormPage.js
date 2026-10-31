@@ -25,7 +25,8 @@ export const useMantenedorProductoFormPage = () => {
         product_price: 0,
         product_star_rating: 0,
         product_title: '',
-        sales_volume: ''
+        sales_volume: '',
+        stock: 0
     })
     const showModal = useModalStore(store => store.showModal)
     const responseModal = useModalStore(store => store.responseModal)
@@ -189,7 +190,7 @@ export const useMantenedorProductoFormPage = () => {
                     setUploadProgress(percentCompleted);
                 }
             };
-
+            debugger;
             await sendRequest('/api/productos', 'POST', fd, config)
             addToast('Producto guardado correctamente', 'success')
             navigate('/admin-producto')
@@ -222,7 +223,7 @@ export const useMantenedorProductoFormPage = () => {
                     setUploadProgress(percentCompleted);
                 }
             };
-
+            debugger;
             await sendRequest('/api/productos/' + id, 'PUT', fd, config)
             addToast('Producto actualizado correctamente', 'success')
             navigate('/admin-producto')

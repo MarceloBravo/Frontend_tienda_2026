@@ -5,9 +5,11 @@ import { useAuthStore, createInitialAuthState } from '../../store/authStore';
 const mockNavigate = jest.fn();
 const mockAddToast = jest.fn();
 const mockLogin = jest.fn();
+const mockLocation = { state: null };
 
 jest.mock('react-router', () => ({
     useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
 }));
 
 jest.mock('../../store/toastStore', () => ({
@@ -27,6 +29,7 @@ describe('useLoginPage', () => {
         mockNavigate.mockReset();
         mockAddToast.mockReset();
         mockLogin.mockReset().mockResolvedValue();
+        mockLocation.state = null;
         useAuthStore.setState({
             ...createInitialAuthState(),
             login: mockLogin,
@@ -117,12 +120,36 @@ describe('useLoginPage', () => {
         });
         renderHook(() => useLoginPage());
 
-        expect(mockNavigate).toHaveBeenCalledWith('/');
+        expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
     });
 
     it('does not redirect when there is no session', () => {
         renderHook(() => useLoginPage());
 
         expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('returns to the origin route after logging in', () => {
+        mockLocation.state = { from: { pathname: '/checkout' } };
+        useAuthStore.setState({
+            ...useAuthStore.getState(),
+            userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' },
+        });
+
+        renderHook(() => useLoginPage());
+
+        expect(mockNavigate).toHaveBeenCalledWith('/checkout', { replace: true });
+    });
+
+    it('accepts a string origin after logging in', () => {
+        mockLocation.state = { from: '/favorites' };
+        useAuthStore.setState({
+            ...useAuthStore.getState(),
+            userSession: { isLoggedIn: true, user: { username: 'ana' }, accessToken: 'token' },
+        });
+
+        renderHook(() => useLoginPage());
+
+        expect(mockNavigate).toHaveBeenCalledWith('/favorites', { replace: true });
     });
 });

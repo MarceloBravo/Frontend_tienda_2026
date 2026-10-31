@@ -2,39 +2,71 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useShoppingCartStore } from '../../store/shoppingCartStore';
 import { useProductStore } from '../../store/productStore';
+import { useAuthStore } from '../../store/authStore';
+import { crearOrden, iniciarPago } from '../../api/pagosApi';
+import { composeDireccionEnvio } from '../../utils/direccionEnvio';
+import { redirectToWebpay } from '../../utils/webpay';
+import { CheckoutSchema, mapZodErrors } from './CheckoutSchema';
+
+const INITIAL_SHIPPING = {
+    nombreDestinatario: '',
+    telefono: '',
+    calle: '',
+    numero: '',
+    departamento: '',
+    comuna: '',
+    ciudad: '',
+    region: '',
+    referencias: '',
+};
 
 export const useCheckoutPage = () => {
     const navigate = useNavigate();
     const productsInCart = useShoppingCartStore((store) => store.products);
     const addToCart = useShoppingCartStore((store) => store.addToCart);
     const decrementProduct = useShoppingCartStore((store) => store.decrementProduct);
-    const getAllProducts = useProductStore((store) => store.getAllProducts);
-    const productsList = useProductStore((store) => store.products);
+    const getProduct = useProductStore((store) => store.getProduct);
+    const clearProductCache = useProductStore((store) => store.clearCache);
+    const userSession = useAuthStore((store) => store.userSession);
 
-    const [paymentMethod, setPaymentMethod] = useState(null);
     const [enriched, setEnriched] = useState({});
+    const [openSection, setOpenSection] = useState('products');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [payError, setPayError] = useState(null);
+    const [shipping, setShipping] = useState(INITIAL_SHIPPING);
+    const [shippingErrors, setShippingErrors] = useState({});
 
     useEffect(() => {
         if (!Array.isArray(productsInCart) || productsInCart.length === 0) {
             navigate('/', { replace: true });
             return;
         }
-        // Try to load product catalog to enrich
-        getAllProducts('', 1).catch(() => { });
-    }, [productsInCart, navigate, getAllProducts]);
 
-    useEffect(() => {
-        const map = {};
-        if (Array.isArray(productsList)) {
-            productsList.forEach((p) => {
-                const key = p.asin || p.id || p.productId;
-                if (key) {
-                    map[key] = p;
-                }
-            });
-        }
-        setEnriched(map);
-    }, [productsList]);
+        let cancelled = false;
+
+        const cargar = async () => {
+            const entries = await Promise.all(
+                productsInCart.map(async (item) => {
+                    try {
+                        const product = await getProduct(item.productId);
+                        return [item.productId, product];
+                    } catch {
+                        return [item.productId, null];
+                    }
+                })
+            );
+
+            if (!cancelled) {
+                setEnriched(Object.fromEntries(entries.filter(([, product]) => product)));
+            }
+        };
+
+        cargar();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [productsInCart, getProduct, navigate]);
 
     const items = useMemo(() => {
         if (!Array.isArray(productsInCart)) return [];
@@ -57,9 +89,13 @@ export const useCheckoutPage = () => {
         });
     }, [productsInCart, enriched]);
 
-    const total = useMemo(() => {
-        return items.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0);
-    }, [items]);
+    const total = useMemo(
+        () => items.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0),
+        [items]
+    );
+
+    const shippingComplete = CheckoutSchema.safeParse(shipping).success;
+    const canPay = total > 0 && shippingComplete && !isProcessing;
 
     const incrementProduct = (productId) => {
         addToCart(productId, 1);
@@ -69,25 +105,66 @@ export const useCheckoutPage = () => {
         decrementProduct(productId);
     };
 
-    const selectPayment = (method) => {
-        setPaymentMethod(method);
+    const toggleSection = (section) => {
+        setOpenSection((current) => (current === section ? null : section));
     };
 
-    const canPay = total > 0 && (paymentMethod === 'redcompra' || paymentMethod === 'webpay');
+    const handleShippingChange = (event) => {
+        const { name, value } = event.target;
+        const next = { ...shipping, [name]: value };
+        setShipping(next);
 
-    const handlePay = () => {
-        if (!canPay) return;
-        // No registration of stock reduction as requested
+        const result = CheckoutSchema.safeParse(next);
+        setShippingErrors(result.success ? {} : mapZodErrors(result.error));
+    };
+
+    const handlePay = async () => {
+        if (isProcessing) return;
+
+        if (!shippingComplete) {
+            setOpenSection('shipping');
+            return;
+        }
+
+        if (!userSession?.isLoggedIn) {
+            navigate('/login', { state: { from: { pathname: '/checkout' } } });
+            return;
+        }
+
+        setIsProcessing(true);
+        setPayError(null);
+
+        try {
+            const orden = await crearOrden({
+                items: items.map((item) => ({ asin: item.productId, cantidad: item.cant })),
+                direccionEnvio: composeDireccionEnvio(shipping),
+            });
+            clearProductCache();
+            const pago = await iniciarPago(orden.ordenId);
+            redirectToWebpay(pago);
+            // No se resetea isProcessing: el navegador sale de la app.
+        } catch (error) {
+            setPayError(
+                error.response?.data?.message || 'No se pudo iniciar el pago. Intenta nuevamente.'
+            );
+            setIsProcessing(false);
+        }
     };
 
     return {
         items,
         total,
-        paymentMethod,
-        selectPayment,
+        openSection,
+        toggleSection,
+        shipping,
+        shippingErrors,
+        handleShippingChange,
+        shippingComplete,
+        canPay,
+        isProcessing,
+        payError,
         incrementProduct,
         decrement,
-        canPay,
         handlePay,
     };
 };

@@ -129,6 +129,11 @@ export const useShoppingCartStore = create((set, get) => ({
         });
     },
 
+    clearCart: () => {
+        writeJSON(CART_STORAGE_KEY, { products: [], productsInCart: 0 });
+        set({ products: [], productsInCart: 0 });
+    },
+
     findProduct: (productId) => {
         return get().products.find(prod => prod.productId === productId);
     },

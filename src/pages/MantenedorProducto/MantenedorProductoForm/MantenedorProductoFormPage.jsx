@@ -105,7 +105,7 @@ export const MantenedorProductoFormPage = () => {
                         <label htmlFor='product_num_ratings'>Puntuación del producto</label>
                         <div className={styles.inputGroup}>
                             <input 
-                                type="text" 
+                                type="number" 
                                 className={styles.formControl} 
                                 id='product_num_ratings' 
                                 name="product_num_ratings" 
@@ -120,7 +120,7 @@ export const MantenedorProductoFormPage = () => {
                         <label htmlFor='product_original_price'>Precio original</label>
                         <div className={styles.inputGroup}>
                             <input 
-                                type="text" 
+                                type="number" 
                                 className={styles.formControl} 
                                 id='product_original_price' 
                                 name="product_original_price" 
@@ -135,7 +135,7 @@ export const MantenedorProductoFormPage = () => {
                         <label htmlFor='product_price'>Precio</label>
                         <div className={styles.inputGroup}>
                             <input 
-                                type="text" 
+                                type="number" 
                                 className={styles.formControl} 
                                 id='product_price' 
                                 name="product_price" 
@@ -212,6 +212,21 @@ export const MantenedorProductoFormPage = () => {
                                 name="sales_volume" 
                                 placeholder='Volumen en venta'
                                 value={formData.sales_volume}
+                                onChange={e => handleInputChange(e)}
+                            />
+                            {validationErrors.sales_volume?._errors?.[0] && <span className={styles.textDanger}>{validationErrors.sales_volume._errors[0]}</span>}
+                        </div>
+                    </div>
+                    <div className={styles.formGroup}>
+                        <label htmlFor='sales_volume'>Stock</label>
+                        <div className={styles.inputGroup}>
+                            <input 
+                                type="number" 
+                                className={styles.formControl} 
+                                id='stock' 
+                                name="stock" 
+                                placeholder='Volumen en venta'
+                                value={formData.stock}
                                 onChange={e => handleInputChange(e)}
                             />
                             {validationErrors.sales_volume?._errors?.[0] && <span className={styles.textDanger}>{validationErrors.sales_volume._errors[0]}</span>}

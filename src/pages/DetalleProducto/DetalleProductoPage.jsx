@@ -7,6 +7,7 @@ import { useShoppingCartStore } from '../../store/shoppingCartStore';
 import { useToastStore } from '../../store/toastStore.js';
 
 import styles from './DetalleProductoPage.module.css'
+import { cargarImagen } from '../../utils/images.js';
 
 export const DetalleProductoPage = () => {
     const params = useParams()
@@ -18,10 +19,13 @@ export const DetalleProductoPage = () => {
     const [ isCheckingStock, setIsCheckingStock ] = useState(false);
     const addToCart = useShoppingCartStore(store => store.addToCart);
     const addToast = useToastStore((store) => store.addToast);
+    const [ urlImagen, setUrlImagen ] = useState(null);
 
     const cargarProducto = useCallback(async (options) => {
         const product = await getProduct(id, options);
         setProducto(product);
+        const img = await cargarImagen(product.product_photo);
+        setUrlImagen(img);
         return product;
     }, [id, getProduct]);
 
@@ -58,7 +62,7 @@ export const DetalleProductoPage = () => {
     <>  
         <div className={styles.productContainer}>
             <div className={styles.imageContainer}>
-                <img src={producto.product_photo} alt={producto.product_title} className={styles.productImage}/>
+                <img src={urlImagen} alt={producto.product_title} className={styles.productImage}/>
             </div>
             <div className={styles.detailsContainer}>
                 <h1 className={styles.productTitle}>{producto.product_title}</h1>
@@ -66,14 +70,14 @@ export const DetalleProductoPage = () => {
                     <span>{producto.product_star_rating} ★</span> ({producto.product_num_ratings} ratings)
                 </p>
                 <p className={styles.productPrice}>
-                    <span className={styles.currentPrice}>{producto.product_price}</span>
-                    {producto.product_original_price && <span className={styles.originalPrice}>{producto.product_original_price}</span>}
+                    <span className={styles.currentPrice}>{`$ ` + producto.product_price}</span>
+                    {producto.product_original_price && <span className={styles.originalPrice}>{`$ ` + producto.product_original_price}</span>}
                 </p>
-                <p className={styles.salesVolume}>{producto.sales_volume}</p>
+                <p className={styles.salesVolume}>Stock: {producto.stock}</p>
                 <div className={styles.badges}>
-                    {producto.is_amazon_choice && <span className={`${styles.badge} ${styles.amazonChoice}`}>Amazon's Choice</span>}
-                    {producto.is_best_seller && <span className={`${styles.badge} ${styles.bestSeller}`}>Best Seller</span>}
-                    {producto.climate_pledge_friendly && <span className={`${styles.badge} ${styles.climatePledge}`}>Climate Pledge Friendly</span>}
+                    {producto.is_amazon_choice === 1 && <span className={`${styles.badge} ${styles.amazonChoice}`}>Amazon's Choice</span>}
+                    {producto.is_best_seller === 1 && <span className={`${styles.badge} ${styles.bestSeller}`}>Best Seller</span>}
+                    {producto.climate_pledge_friendly === 1 && <span className={`${styles.badge} ${styles.climatePledge}`}>Climate Pledge Friendly</span>}
                 </div>
                 <button
                     type="button"
@@ -81,9 +85,9 @@ export const DetalleProductoPage = () => {
                     onClick={() => addItemToCart(producto.asin ?? id, 1)}
                     disabled={isCheckingStock}
                 >
-                    Add to Cart
+                    Agregar al carrito
                 </button>
-                <p className={styles.deliveryInfo}>{producto.delivery}</p>
+                <p className={styles.deliveryInfo}>{(producto.delivery && producto.delivery !== 'null')? producto.delivery : 'Envío normal'}</p>
             </div>
         </div>
     </>

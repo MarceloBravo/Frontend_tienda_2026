@@ -30,8 +30,6 @@
     font-weight: 600;
 }
 
-.productsSection,
-.paymentSection,
 .summarySection {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -125,39 +123,20 @@
     text-align: center;
 }
 
-.paymentOptions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.paymentOption {
-    position: relative;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.5rem;
-    cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+.continueButton {
+    margin-top: 1rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid #2563eb;
+    border-radius: 6px;
     background: #fff;
+    color: #2563eb;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
 }
 
-.paymentOption.selected {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-}
-
-.hiddenCheckbox {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.paymentImage {
-    width: 120px;
-    height: 60px;
-    object-fit: contain;
-    display: block;
+.continueButton:hover {
+    background: #eff6ff;
 }
 
 .summaryRow {
@@ -177,6 +156,21 @@
     color: #374151;
 }
 
+.payError {
+    margin: 0.75rem 0 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 6px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 0.9rem;
+}
+
+.helperText {
+    margin: 0.75rem 0 0;
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
 .payButton {
     margin-top: 1rem;
     width: 100%;
@@ -187,6 +181,10 @@
     border-radius: 6px;
     font-size: 1rem;
     cursor: pointer;
+}
+
+.payButton:hover:not(:disabled) {
+    background: #1d4ed8;
 }
 
 .payButton:disabled {

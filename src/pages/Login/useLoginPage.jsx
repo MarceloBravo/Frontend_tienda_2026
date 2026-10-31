@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 
@@ -12,12 +12,15 @@ export const useLoginPage = () => {
   const userSession = useAuthStore((state) => state.userSession);
   const addToast  = useToastStore(store => store.addToast);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (userSession?.isLoggedIn) {
-      navigate('/');
+      const from = location.state?.from;
+      const destino = typeof from === 'string' ? from : from?.pathname || '/';
+      navigate(destino, { replace: true });
     }
-  }, [userSession?.isLoggedIn, navigate]);
+  }, [userSession?.isLoggedIn, navigate, location.state]);
 
   const handleInputChange = (e) => {
     if(e.target.value.trim().length === 0){

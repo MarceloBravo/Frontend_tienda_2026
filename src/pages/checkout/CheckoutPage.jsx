@@ -1,17 +1,23 @@
 import { useCheckoutPage } from './useCheckoutPage';
+import { AccordionComponent } from '../../components/accordion/AccordionComponent';
+import { ShippingForm } from './ShippingForm';
 import styles from './CheckoutPage.module.css';
-import redcompraImg from '../../assets/redcompra.png';
-import webpayImg from '../../assets/paypal.png';
 
 export const CheckoutPage = () => {
     const {
         items,
         total,
-        paymentMethod,
-        selectPayment,
+        openSection,
+        toggleSection,
+        shipping,
+        shippingErrors,
+        handleShippingChange,
+        shippingComplete,
         incrementProduct,
         decrement,
         canPay,
+        isProcessing,
+        payError,
         handlePay,
     } = useCheckoutPage();
 
@@ -24,8 +30,13 @@ export const CheckoutPage = () => {
         <div className={styles.container}>
             <div className={styles.mainGrid}>
                 <div className={styles.leftColumn}>
-                    <section className={styles.productsSection}>
-                        <h2 className={styles.sectionTitle}>Resumen de productos</h2>
+                    <AccordionComponent
+                        id="products"
+                        title="Resumen de productos"
+                        subtitle={`${items.length} producto(s)`}
+                        isOpen={openSection === 'products'}
+                        onToggle={() => toggleSection('products')}
+                    >
                         <div className={styles.tableWrapper}>
                             <table className={styles.productsTable}>
                                 <thead>
@@ -81,33 +92,29 @@ export const CheckoutPage = () => {
                                 </tbody>
                             </table>
                         </div>
-                    </section>
 
-                    <section className={styles.paymentSection}>
-                        <h2 className={styles.sectionTitle}>Forma de pago</h2>
-                        <div className={styles.paymentOptions}>
-                            <label className={`${styles.paymentOption} ${paymentMethod === 'redcompra' ? styles.selected : ''}`}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.hiddenCheckbox}
-                                    checked={paymentMethod === 'redcompra'}
-                                    onChange={() => selectPayment(paymentMethod === 'redcompra' ? null : 'redcompra')}
-                                    aria-label="Redcompra"
-                                />
-                                <img src={redcompraImg} alt="Redcompra" className={styles.paymentImage} />
-                            </label>
-                            <label className={`${styles.paymentOption} ${paymentMethod === 'webpay' ? styles.selected : ''}`}>
-                                <input
-                                    type="checkbox"
-                                    className={styles.hiddenCheckbox}
-                                    checked={paymentMethod === 'webpay'}
-                                    onChange={() => selectPayment(paymentMethod === 'webpay' ? null : 'webpay')}
-                                    aria-label="Webpay"
-                                />
-                                <img src={webpayImg} alt="Webpay" className={styles.paymentImage} />
-                            </label>
-                        </div>
-                    </section>
+                        <button
+                            type="button"
+                            className={styles.continueButton}
+                            onClick={() => toggleSection('shipping')}
+                        >
+                            Continuar con datos de envío
+                        </button>
+                    </AccordionComponent>
+
+                    <AccordionComponent
+                        id="shipping"
+                        title="Datos de envío"
+                        subtitle={shippingComplete ? 'Completado' : 'Pendiente'}
+                        isOpen={openSection === 'shipping'}
+                        onToggle={() => toggleSection('shipping')}
+                    >
+                        <ShippingForm
+                            values={shipping}
+                            errors={shippingErrors}
+                            onChange={handleShippingChange}
+                        />
+                    </AccordionComponent>
                 </div>
 
                 <aside className={styles.rightColumn}>
@@ -118,19 +125,32 @@ export const CheckoutPage = () => {
                             <span className={styles.totalAmount}>{formatPrice(total)}</span>
                         </div>
                         <div className={styles.summaryRow}>
-                            <span>Forma de pago</span>
-                            <span className={styles.paymentName}>
-                                {paymentMethod === 'redcompra' ? 'Redcompra' : paymentMethod === 'webpay' ? 'Webpay' : '-'}
-                            </span>
+                            <span>Medio de pago</span>
+                            <span className={styles.paymentName}>Webpay Plus (débito o crédito)</span>
                         </div>
+                        {payError && (
+                            <p className={styles.payError} role="alert">
+                                {payError}
+                            </p>
+                        )}
                         <button
                             type="button"
                             className={styles.payButton}
                             disabled={!canPay}
                             onClick={handlePay}
                         >
-                            Pagar
+                            {isProcessing ? 'Redirigiendo a Webpay…' : 'Pagar con Webpay Plus'}
                         </button>
+                        {!shippingComplete && (
+                            <p className={styles.helperText}>
+                                Completa los datos de envío para continuar.
+                            </p>
+                        )}
+                        {shippingComplete && total <= 0 && (
+                            <p className={styles.helperText} role="alert">
+                                No pudimos calcular el total. Revisa tu carrito e intenta nuevamente.
+                            </p>
+                        )}
                     </section>
                 </aside>
             </div>

@@ -13,6 +13,7 @@ const Page403 = lazy(() => import('../pages/Page403/Page403').then(module => ({ 
 const Page404 = lazy(() => import('../pages/Page404/Page404').then(module => ({ default: module.Page404 })));
 const LoginPage = lazy(() => import('../pages/Login/LoginPage').then(module => ({ default: module.LoginPage })));
 const CheckoutPage = lazy(() => import('../pages/checkout/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
+const PagoResultadoPage = lazy(() => import('../pages/PagoResultado/PagoResultadoPage').then(module => ({ default: module.PagoResultadoPage })));
 
 const Navigation = () => {
   return (
@@ -23,6 +24,7 @@ const Navigation = () => {
                 <Route path="/detalle-producto/:id" element={<DetalleProductoPage/>}/>
                 <Route path="/favorites" element={<FavoritePage/>} />
                 <Route path="/checkout" element={<CheckoutPage/>}/>
+                <Route path="/pago/resultado" element={<PagoResultadoPage/>}/>
 
                 {/* Rutas del Mantenedor de productos */}
                 <Route path='/admin-producto' element={<ProtectedRoutes requiredRole="admin"> <MantenedorProductoListPage/> </ProtectedRoutes>}/>

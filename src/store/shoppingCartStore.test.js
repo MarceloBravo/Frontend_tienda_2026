@@ -131,6 +131,19 @@ describe('shoppingCartStore', () => {
         expect(useShoppingCartStore.getState().findProduct('NO-EXISTE')).toBeUndefined();
     });
 
+    test('clearCart vacía el estado y el localStorage', () => {
+        useShoppingCartStore.getState().addToCart('B001', 2, 'Producto uno');
+
+        useShoppingCartStore.getState().clearCart();
+
+        expect(useShoppingCartStore.getState().products).toEqual([]);
+        expect(useShoppingCartStore.getState().productsInCart).toBe(0);
+        expect(JSON.parse(localStorage.getItem('shopping_cart'))).toEqual({
+            products: [],
+            productsInCart: 0,
+        });
+    });
+
     test('el carrito inicia abierto y se puede cerrar, abrir y alternar', () => {
         expect(useShoppingCartStore.getState().isOpen).toBe(true);
 
