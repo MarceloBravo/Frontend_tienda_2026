@@ -34,7 +34,6 @@ export const useMantenedorProductoListPage = () => {
                 totalPages: totalPaginas,
                 page: paginaActual,
             } = normalizeProductsResponse(response);
-            console.log('response',response, 'totalPaginas',totalPaginas);
 
             setProductos(productosData);
             setTotal(totalProductos);

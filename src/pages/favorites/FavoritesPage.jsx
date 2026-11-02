@@ -8,7 +8,7 @@ export const FavoritePage = () => {
         arrFavoritos,
         addItemToCart,
         removeFromFavorites
-    } =useFavoritesPage(); 
+    } = useFavoritesPage(); 
     
 
     return (
