@@ -122,7 +122,7 @@ export const CheckoutPage = () => {
                         <h2 className={styles.sectionTitle}>Resumen de compra</h2>
                         <div className={styles.summaryRow}>
                             <span>Total</span>
-                            <span className={styles.totalAmount}>{formatPrice(total)}</span>
+                            <span className={styles.totalAmount}>{`$ `+ formatPrice(total)}</span>
                         </div>
                         <div className={styles.summaryRow}>
                             <span>Medio de pago</span>
@@ -151,6 +151,18 @@ export const CheckoutPage = () => {
                                 No pudimos calcular el total. Revisa tu carrito e intenta nuevamente.
                             </p>
                         )}
+                    </section>
+                    <section className={styles.cardInfoSection}>
+                        <h2 className={styles.sectionTitle}>Información acerca de la tarjeta</h2>
+                        <p className={styles.cardInfoText}>
+                            Para realizar el pago, debes ingresar los datos de una tarjeta de crédito o débito. Para probar el flujo de pago, puedes obtener datos de tarjetas de prueba proporcionados por Webpay en el siguiente enlace: <a rel="noreferrer" href="https://www.transbankdevelopers.cl/documentacion/como_empezar#tarjetas-de-prueba" target="_blank">Documentación de Webpay</a>. 
+                        </p>
+                        <p>
+                            Luego de ingresar los datos de la tarjeta, WebPay solicitará un Rut y una contraseña de seguridad. Para completar el flujo de pago, puedes usar los siguientes datos de prueba: <br />
+                            <strong>Rut:</strong> 11.111.111-1 <br />
+                            <strong>Contraseña:</strong> 123
+                        </p>
+                        <p><b>Importante:</b> NO ingreses datos de una tarjeta real ya que la operación será rechazada.</p>
                     </section>
                 </aside>
             </div>

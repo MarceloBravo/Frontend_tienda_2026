@@ -59,41 +59,6 @@ export const MenuComponent = () => {
                 </li>
               </ul>
           </nav>
-          {/*
-          <div className={styles.userActions}>
-            <Link to="/favorites" title="Favoritos">
-              <span className={styles.icon}>❤️</span>
-              <span className={styles.cartCount}>{favoritos}</span>
-            </Link>
-              <div className={styles.userMenu}>
-                <ul>
-                  {(!userSession || !userSession.isLoggedIn) &&
-                    <>
-                      <li><Link to='/login'>Iniciar session</Link></li>
-                      <li><Link to='/register'>Registrarse</Link></li>
-                    </>
-                  }
-                  {userSession && userSession.isLoggedIn && 
-                    <>
-                      {userSession?.user?.username && <li>Hola {userSession.user.username} - </li>}
-                      <li><button type="button" onClick={endSession}>Cerrar session</button></li>
-                    </>
-                  }
-                  <li>
-                    <NavLink to="/favorites">
-                      <span className={styles.icon}>❤️</span>
-                      <span className={styles.cartCount}>{favoritos}</span>
-                    </NavLink>
-                  </li>
-                  <li className={styles.cartIcon}>
-                    <button type="button" onClick={openCart}>
-                      <span className={styles.icon}>🛒</span>
-                      <span className={styles.cartItemsCount}>{countProductsInCart}</span>
-                    </button>
-                  </li>
-                </ul>
-              </div>
-              */}
           </div>
       </header>
     </>

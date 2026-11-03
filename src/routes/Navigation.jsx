@@ -23,13 +23,13 @@ const Navigation = () => {
                 <Route path="/" element={<HomePage/>}/>
                 <Route path="/detalle-producto/:id" element={<DetalleProductoPage/>}/>
                 <Route path="/favorites" element={<FavoritePage/>} />
-                <Route path="/checkout" element={<CheckoutPage/>}/>
                 <Route path="/pago/resultado" element={<PagoResultadoPage/>}/>
 
-                {/* Rutas del Mantenedor de productos */}
+                {/* Rutas autenticadas */}
                 <Route path='/admin-producto' element={<ProtectedRoutes requiredRole="admin"> <MantenedorProductoListPage/> </ProtectedRoutes>}/>
                 <Route path='/admin-producto/editar/:id' element={<ProtectedRoutes requiredRole="admin"><MantenedorProductoFormPage/></ProtectedRoutes>}/>
                 <Route path='/admin-producto/nuevo' element={<ProtectedRoutes requiredRole="admin"><MantenedorProductoFormPage/></ProtectedRoutes>}/>
+                <Route path="/checkout" element={ <ProtectedRoutes><CheckoutPage/></ProtectedRoutes>}/>
 
                 {/* Rutas de autenticación */}
                 <Route path="/login" element={<LoginPage/>} />

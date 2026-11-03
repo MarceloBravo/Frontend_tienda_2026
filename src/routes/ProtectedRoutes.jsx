@@ -11,7 +11,7 @@ export const ProtectedRoutes = ({ children, requiredRole }) => {
         return <div>Cargando...</div>
     }
 
-    if (!userSession?.user || error) {
+    if (!userSession?.isLoggedIn || !userSession?.user || error) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
     if (userSession.user.rol !== requiredRole && requiredRole) {

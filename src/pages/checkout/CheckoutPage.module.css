@@ -22,6 +22,8 @@
 .rightColumn {
     position: sticky;
     top: 1rem;
+    gap: 1em;
+    display: grid;
 }
 
 .sectionTitle {
@@ -30,7 +32,8 @@
     font-weight: 600;
 }
 
-.summarySection {
+.summarySection,
+.cardInfoSection {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -191,6 +194,7 @@
     background: #9ca3af;
     cursor: not-allowed;
 }
+
 
 @media (max-width: 900px) {
     .mainGrid {

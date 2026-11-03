@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useShoppingCartStore } from '../../store/shoppingCartStore';
 import { useToastStore } from '../../store/toastStore';
 import { useNavigate } from 'react-router';
+import { useAuthStore, selectIsAuthenticated } from '../../store/authStore';
 
 export const useShoppingCartComponent = () => {
     const products = useShoppingCartStore((store) => store.products);
@@ -11,6 +12,7 @@ export const useShoppingCartComponent = () => {
     const decrementProduct = useShoppingCartStore((store) => store.decrementProduct);
     const addToast = useToastStore((store) => store.addToast);
     const previousCount = useRef(products.length);
+    const isAuthenticated = useAuthStore(selectIsAuthenticated);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -33,6 +35,10 @@ export const useShoppingCartComponent = () => {
             return;
         }
         closeCart();
+        if (!isAuthenticated) {
+            navigate("/login", { state: { from: { pathname: "/checkout" } } });
+            return;
+        }
         navigate("/checkout");
     }
 

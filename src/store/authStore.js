@@ -113,4 +113,7 @@ export const useAuthStore = create((set, get) => ({
     },
 }));
 
+export const selectIsAuthenticated = (state) =>
+    Boolean(state.userSession?.isLoggedIn && state.userSession?.user);
+
 injectStore(useAuthStore);
